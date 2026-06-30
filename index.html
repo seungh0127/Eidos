@@ -7,8 +7,39 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+
+/* ── Page system ── */
+.page {
+  position: fixed; inset: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.page.active {
+  opacity: 1; pointer-events: auto;
+}
+
+#page2 { background: #fff; }
+
+/* ── Logo button ── */
+#logo-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#logo-btn img {
+  display: block;
+  height: 72px;
+  width: auto;
+}
+
+/* ── Gallery page ── */
 #viewport {
-  position: fixed; inset: 0; overflow: hidden;
+  position: absolute; inset: 0; overflow: hidden;
   cursor: grab; user-select: none; -webkit-user-select: none;
 }
 #viewport.dragging { cursor: grabbing; }
@@ -31,8 +62,20 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
 </style>
 </head>
 <body>
-<div id="viewport">
-  <div id="world"></div>
+
+<!-- Page 1: Gallery -->
+<div id="page1" class="page active">
+  <div id="viewport">
+    <div id="world"></div>
+  </div>
+</div>
+
+<!-- Page 2: blank -->
+<div id="page2" class="page"></div>
+
+<!-- Logo: always on top, toggles pages -->
+<div id="logo-btn">
+  <img src="assets/Logo.svg" alt="Eidos">
 </div>
 <script>
 // ─── Module list ──────────────────────────────────────────────────────────────
@@ -428,6 +471,24 @@ viewport.addEventListener('wheel', e => {
     camY  = wy - my / scale;
   }
 }, { passive: false });
+
+// ─── Page toggle ──────────────────────────────────────────────────────────────
+const page1   = document.getElementById('page1');
+const page2   = document.getElementById('page2');
+const logoBtn = document.getElementById('logo-btn');
+let   currentPage = 1;
+
+logoBtn.addEventListener('click', () => {
+  if (currentPage === 1) {
+    page1.classList.remove('active');
+    page2.classList.add('active');
+    currentPage = 2;
+  } else {
+    page2.classList.remove('active');
+    page1.classList.add('active');
+    currentPage = 1;
+  }
+});
 </script>
 </body>
 </html>
