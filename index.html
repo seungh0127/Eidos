@@ -174,7 +174,6 @@ function fillSlot(el, col, row) {
   el.style.transform = `translate(${col * TILE_W}px,${row * TILE_H}px)`;
 
   const items = getTileData(col, row);
-  // Rebuild children
   el.innerHTML = '';
   const frag = document.createDocumentFragment();
   items.forEach(({ file, x, y }) => {
@@ -182,14 +181,61 @@ function fillSlot(el, col, row) {
     mod.className = 'module';
     mod.style.left = x + 'px';
     mod.style.top  = y + 'px';
+    mod.dataset.file = file;
+
     const img = document.createElement('img');
-    img.src = 'assets/' + file + '.gif';
+    // Default: static WebP thumbnail (no GIF decoding)
+    img.src = 'assets/thumbs/' + file + '.webp';
     img.alt = file;
     mod.appendChild(img);
     frag.appendChild(mod);
   });
   el.appendChild(frag);
 }
+
+// --- GIF hover logic (event delegation on #world) ---
+// Preload cache: file → Image (browser caches the GIF data)
+const gifCache   = new Map();   // file → Image (preloaded)
+const MAX_CACHED = 16;          // max GIFs kept in browser memory
+
+function preloadGif(file) {
+  if (gifCache.has(file)) return;
+  // Evict oldest entry if over limit
+  if (gifCache.size >= MAX_CACHED) {
+    const oldest = gifCache.keys().next().value;
+    gifCache.delete(oldest);
+  }
+  const preImg = new Image();
+  preImg.src = 'assets/' + file + '.gif';
+  gifCache.set(file, preImg);
+}
+
+world.addEventListener('mouseover', e => {
+  if (isDragging) return;
+  const mod = e.target.closest('.module');
+  if (!mod) return;
+  const file = mod.dataset.file;
+  if (!file) return;
+  const img = mod.querySelector('img');
+  if (!img || img.dataset.mode === 'gif') return;
+  // Force restart: clear src first, then set GIF
+  img.src = '';
+  img.src = 'assets/' + file + '.gif';
+  img.dataset.mode = 'gif';
+});
+
+world.addEventListener('mouseout', e => {
+  const mod = e.target.closest('.module');
+  if (!mod) return;
+  // Ignore if still within the same module (moving between child elements)
+  if (mod.contains(e.relatedTarget)) return;
+  const file = mod.dataset.file;
+  if (!file) return;
+  const img = mod.querySelector('img');
+  if (!img || img.dataset.mode !== 'gif') return;
+  img.src = 'assets/thumbs/' + file + '.webp';
+  img.dataset.mode = 'webp';
+});
 
 // --- Camera ---
 let camX = TILE_W / 2 - window.innerWidth  / 2;
@@ -238,15 +284,28 @@ function updateTiles() {
   }
 }
 
-// --- Culling: hide modules outside viewport ---
+// --- Culling: hide modules outside viewport + selective preload ---
+// Preload only modules in the inner viewport (no margin) — small set, high relevance
+let preloadFrame = 0;
 function updateCulling() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const margin = IMG * 1.5 / scale;
-  const left   = camX - margin;
-  const top    = camY - margin;
-  const right  = camX + vw / scale + margin;
-  const bottom = camY + vh / scale + margin;
+  const cullMargin     = IMG * 1.2 / scale;   // slightly beyond screen
+  const preloadMargin  = IMG * 0.5 / scale;   // just inside screen edge
+
+  const left   = camX - cullMargin;
+  const top    = camY - cullMargin;
+  const right  = camX + vw / scale + cullMargin;
+  const bottom = camY + vh / scale + cullMargin;
+
+  // Preload boundary (inner area)
+  const pLeft   = camX + preloadMargin;
+  const pTop    = camY + preloadMargin;
+  const pRight  = camX + vw / scale - preloadMargin;
+  const pBottom = camY + vh / scale - preloadMargin;
+
+  // Collect candidates for preload this frame (stagger to avoid burst)
+  const preloadCandidates = [];
 
   for (let sj = 0; sj < 3; sj++) {
     for (let si = 0; si < 3; si++) {
@@ -258,7 +317,6 @@ function updateCulling() {
       const tx = tc * TILE_W;
       const ty = tr * TILE_H;
 
-      // Tile entirely outside?
       if (tx + TILE_W < left || tx > right || ty + TILE_H < top || ty > bottom) {
         slot.style.visibility = 'hidden';
         continue;
@@ -273,18 +331,30 @@ function updateCulling() {
         const vis = mx + IMG >= left && mx <= right && my + IMG >= top && my <= bottom;
         mod.style.display = vis ? '' : 'none';
 
-        // Pause/resume GIF by toggling src (avoids costly frames off-screen)
-        const img = mod.firstChild;
-        if (img) {
-          if (!vis && img.src) {
-            img._src = img.src;
-            img.src = '';
-          } else if (vis && !img.src && img._src) {
-            img.src = img._src;
+        // If GIF was playing and module goes off-screen, revert to WebP thumbnail
+        if (!vis) {
+          const img = mod.firstChild;
+          if (img && img.dataset.mode === 'gif') {
+            img.src = 'assets/thumbs/' + mod.dataset.file + '.webp';
+            img.dataset.mode = 'webp';
           }
+          continue;
+        }
+
+        // Collect visible modules in inner zone for GIF preloading
+        const file = mod.dataset.file;
+        if (file && mx >= pLeft && mx + IMG <= pRight && my >= pTop && my + IMG <= pBottom) {
+          preloadCandidates.push(file);
         }
       }
     }
+  }
+
+  // Stagger preloads: process 2 candidates per frame to avoid network burst
+  preloadFrame = (preloadFrame + 1) % 3;
+  if (preloadFrame === 0 && preloadCandidates.length > 0) {
+    const toLoad = preloadCandidates.slice(0, 4);
+    toLoad.forEach(preloadGif);
   }
 }
 
