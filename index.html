@@ -8,41 +8,23 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
 #viewport {
-  position: fixed; inset: 0;
-  overflow: hidden;
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
+  position: fixed; inset: 0; overflow: hidden;
+  cursor: grab; user-select: none; -webkit-user-select: none;
 }
 #viewport.dragging { cursor: grabbing; }
 #world {
-  position: absolute;
-  top: 0; left: 0;
+  position: absolute; top: 0; left: 0;
   transform-origin: 0 0;
-  will-change: transform;
-}
-.tile {
-  position: absolute;
-  top: 0; left: 0;
   will-change: transform;
 }
 .module {
   position: absolute;
-  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   transform-origin: center center;
-  z-index: 1;
-}
-.module:hover {
-  transform: scale(1.22);
-  z-index: 100;
-}
-#viewport.dragging .module {
-  transition: none;
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .module img {
   display: block;
-  width: 200px;
-  height: 200px;
+  width: 200px; height: 200px;
   object-fit: contain;
   pointer-events: none;
 }
@@ -53,6 +35,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
   <div id="world"></div>
 </div>
 <script>
+// ─── Module list ──────────────────────────────────────────────────────────────
 const MODULES = [
   'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
   'H-B-1','H-B-2','H-B-3','H-B-4','H-B-5',
@@ -65,7 +48,7 @@ const MODULES = [
   'C-D-1','C-D-2',
   'C-E-1','C-E-2','C-E-3',
   'S-A-1','S-A-2','S-A-3',
-  'S-B-1','S-B-2','S-B-3',
+  'S-B-1','S-B-2',
   'S-C-1','S-C-2','S-C-3',
   'S-D-1','S-D-2','S-D-3',
   'S-E-1','S-E-2','S-E-3',
@@ -94,18 +77,12 @@ const MODULES = [
   'EX-B-1','EX-C-1','EX-D-1',
 ];
 
-// --- Layout constants ---
+// ─── Grid layout ─────────────────────────────────────────────────────────────
 const IMG  = 200;
-const GAP  = 160;              // gap between images
-const CELL = IMG + GAP;        // 360
-const COLS = 8;
-const ROWS = 14;               // 8×14 = 112 exactly
-// PAD = GAP/2 ensures the inter-tile gap equals the intra-tile gap (seamless)
-const PAD  = GAP / 2;          // 80
-const TILE_W = COLS * CELL;    // 2880
-const TILE_H = ROWS * CELL;    // 5040
+const GAP  = 160;
+const CELL = IMG + GAP;   // 440 world px per grid cell
 
-// --- Seeded PRNG ---
+// ─── PRNG ─────────────────────────────────────────────────────────────────────
 function mulberry32(seed) {
   seed = seed >>> 0;
   return function () {
@@ -116,250 +93,251 @@ function mulberry32(seed) {
   };
 }
 
-function seededShuffle(arr, rng) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+// Deterministic module file for each grid position
+function moduleAt(c, r) {
+  const seed = (((c * 73856093) ^ (r * 19349663)) >>> 0) + 1;
+  const rng  = mulberry32(seed);
+  return MODULES[Math.floor(rng() * MODULES.length)];
 }
 
-// Generate tile positions from (col, row) pair — cached for revisits
-const tileCache = new Map();
-
-function getTileData(col, row) {
-  const key = col + ',' + row;
-  if (tileCache.has(key)) return tileCache.get(key);
-
-  // Use a stable seed per tile position
-  const seedVal = (((col * 73856093) ^ (row * 19349663)) >>> 0) + 1;
-  const rng = mulberry32(seedVal);
-  const shuffled = seededShuffle(MODULES, rng);
-
-  const items = shuffled.map((file, i) => {
-    const c = i % COLS;
-    const r = Math.floor(i / COLS);
-    const x = PAD + c * CELL;
-    const y = PAD + r * CELL;
-    return { file, x, y };
-  });
-
-  tileCache.set(key, items);
-  return items;
-}
-
-// --- DOM ---
-const viewport = document.getElementById('viewport');
+// ─── DOM elements ─────────────────────────────────────────────────────────────
 const world    = document.getElementById('world');
+const viewport = document.getElementById('viewport');
 
-// Create 3×3 tile slot elements
-const slots = [];
-for (let sj = 0; sj < 3; sj++) {
-  slots[sj] = [];
-  for (let si = 0; si < 3; si++) {
-    const el = document.createElement('div');
-    el.className = 'tile';
-    el.dataset.col = 'x';
-    el.dataset.row = 'x';
-    world.appendChild(el);
-    slots[sj][si] = el;
+// ─── Element pool ─────────────────────────────────────────────────────────────
+const modulePool = [];
+
+function acquireModule() {
+  const el = modulePool.pop() || (() => {
+    const d = document.createElement('div');
+    d.className = 'module';
+    const img = document.createElement('img');
+    d.appendChild(img);
+    return d;
+  })();
+  return el;
+}
+
+function releaseModule(el) {
+  // Revert GIF to WebP before pooling
+  const img = el.querySelector('img');
+  if (img && img.dataset.mode === 'gif') {
+    img.src = `assets/thumbs/${el.dataset.file}.webp`;
+    img.dataset.mode = '';
+  }
+  el.style.transform = '';
+  el.style.zIndex    = '';
+  if (modulePool.length < 300) modulePool.push(el);
+}
+
+// ─── Active modules ────────────────────────────────────────────────────────────
+// "c,r" → DOM element
+const active = new Map();
+
+function addModule(c, r) {
+  const key  = c + ',' + r;
+  if (active.has(key)) return;
+
+  const file = moduleAt(c, r);
+  const el   = acquireModule();
+  el.dataset.file = file;
+  el.style.left   = (c * CELL) + 'px';
+  el.style.top    = (r * CELL) + 'px';
+
+  const img = el.querySelector('img');
+  img.src          = `assets/thumbs/${file}.webp`;
+  img.alt          = file;
+  img.dataset.mode = '';
+
+  applyModBaseScale(el, modBaseScale);
+  world.appendChild(el);
+  active.set(key, el);
+}
+
+function removeModule(key) {
+  const el = active.get(key);
+  if (!el) return;
+  world.removeChild(el);
+  releaseModule(el);
+  active.delete(key);
+}
+
+// ─── Module base scale (widens gap as zoom increases above 1.0) ───────────────
+// Returns a CSS scale < 1 applied to each module when zoomed in,
+// shrinking the image in world-space so the gap grows proportionally.
+function getModBaseScale(s) {
+  if (s >= 1.0) return 1.0;
+  return Math.max(0.65, 1.0 - (1.0 - s) * 0.3);
+}
+
+let modBaseScale = 1.0;
+
+function applyModBaseScale(el, mbs) {
+  el.style.transform = mbs < 1.0 ? `scale(${mbs.toFixed(4)})` : '';
+}
+
+function updateModuleBaseScales() {
+  const mbs = getModBaseScale(scale);
+  if (Math.abs(mbs - modBaseScale) < 0.0005) return;
+  modBaseScale = mbs;
+  for (const el of active.values()) {
+    if (el.dataset.hovered === '1') continue;   // don't interrupt hover
+    applyModBaseScale(el, mbs);
   }
 }
 
-function fillSlot(el, col, row) {
-  if (el.dataset.col === String(col) && el.dataset.row === String(row)) return;
-  el.dataset.col = col;
-  el.dataset.row = row;
-  el.style.transform = `translate(${col * TILE_W}px,${row * TILE_H}px)`;
+// ─── Camera ───────────────────────────────────────────────────────────────────
+let camX  = -window.innerWidth  / 2;
+let camY  = -window.innerHeight / 2;
+let scale = 1.0;
+const MIN_SCALE = 0.35, MAX_SCALE = 1.5;
 
-  const items = getTileData(col, row);
-  el.innerHTML = '';
-  const frag = document.createDocumentFragment();
-  items.forEach(({ file, x, y }) => {
-    const mod = document.createElement('div');
-    mod.className = 'module';
-    mod.style.left = x + 'px';
-    mod.style.top  = y + 'px';
-    mod.dataset.file = file;
+const DRIFT    = 0.55;
+const DRIFT_DX = Math.cos(150 * Math.PI / 180) * DRIFT;
+const DRIFT_DY = Math.sin(150 * Math.PI / 180) * DRIFT;
 
-    const img = document.createElement('img');
-    // Default: static WebP thumbnail (no GIF decoding)
-    img.src = 'assets/thumbs/' + file + '.webp';
-    img.alt = file;
-    mod.appendChild(img);
-    frag.appendChild(mod);
-  });
-  el.appendChild(frag);
+function applyCamera() {
+  world.style.transform = `scale(${scale}) translate(${-camX}px,${-camY}px)`;
 }
 
-// --- GIF hover logic (event delegation on #world) ---
-// Preload cache: file → Image (browser caches the GIF data)
-const gifCache   = new Map();   // file → Image (preloaded)
-const MAX_CACHED = 16;          // max GIFs kept in browser memory
+// ─── Viewport culling ─────────────────────────────────────────────────────────
+// Triggered only when grid-column or grid-row boundary is crossed.
+let lastBounds = null;
+
+function updateModules() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const margin = CELL;   // 1-cell render margin around viewport
+
+  // Grid range that should be rendered
+  const minC = Math.floor((camX - margin) / CELL);
+  const maxC = Math.floor((camX + vw / scale + margin) / CELL);
+  const minR = Math.floor((camY - margin) / CELL);
+  const maxR = Math.floor((camY + vh / scale + margin) / CELL);
+
+  // Fast exit: nothing changed
+  if (lastBounds &&
+      minC === lastBounds.minC && maxC === lastBounds.maxC &&
+      minR === lastBounds.minR && maxR === lastBounds.maxR) return;
+  lastBounds = { minC, maxC, minR, maxR };
+
+  // Remove modules outside 2-cell remove margin
+  const rm = CELL * 2;
+  const rmMinC = Math.floor((camX - rm) / CELL);
+  const rmMaxC = Math.floor((camX + vw / scale + rm) / CELL);
+  const rmMinR = Math.floor((camY - rm) / CELL);
+  const rmMaxR = Math.floor((camY + vh / scale + rm) / CELL);
+
+  for (const [key, el] of active) {
+    const comma = key.indexOf(',');
+    const c = +key.slice(0, comma), r = +key.slice(comma + 1);
+    if (c < rmMinC || c > rmMaxC || r < rmMinR || r > rmMaxR) removeModule(key);
+  }
+
+  // Add modules in render range
+  for (let r = minR; r <= maxR; r++) {
+    for (let c = minC; c <= maxC; c++) addModule(c, r);
+  }
+
+  // Preload WebP for 2-cell margin zone
+  for (let r = rmMinR; r <= rmMaxR; r++) {
+    for (let c = rmMinC; c <= rmMaxC; c++) {
+      if (!active.has(c + ',' + r)) preloadWebP(moduleAt(c, r));
+    }
+  }
+}
+
+// ─── WebP preload ─────────────────────────────────────────────────────────────
+const webpPreloaded = new Set();
+function preloadWebP(file) {
+  if (webpPreloaded.has(file)) return;
+  webpPreloaded.add(file);
+  new Image().src = `assets/thumbs/${file}.webp`;
+}
+
+// ─── GIF cache ────────────────────────────────────────────────────────────────
+const gifCache     = new Map();
+const MAX_GIF_CACHE = 16;
 
 function preloadGif(file) {
   if (gifCache.has(file)) return;
-  // Evict oldest entry if over limit
-  if (gifCache.size >= MAX_CACHED) {
-    const oldest = gifCache.keys().next().value;
-    gifCache.delete(oldest);
-  }
-  const preImg = new Image();
-  preImg.src = 'assets/' + file + '.gif';
-  gifCache.set(file, preImg);
+  if (gifCache.size >= MAX_GIF_CACHE) gifCache.delete(gifCache.keys().next().value);
+  const img = new Image();
+  img.src = `assets/${file}.gif`;
+  gifCache.set(file, img);
 }
 
+// ─── Hover (event delegation) ─────────────────────────────────────────────────
 world.addEventListener('mouseover', e => {
   if (isDragging) return;
   const mod = e.target.closest('.module');
   if (!mod) return;
   const file = mod.dataset.file;
   if (!file) return;
+
+  mod.dataset.hovered = '1';
+  mod.style.transform = `scale(${(modBaseScale * 1.22).toFixed(4)})`;
+  mod.style.zIndex    = '100';
+
   const img = mod.querySelector('img');
-  if (!img || img.dataset.mode === 'gif') return;
-  // Force restart: clear src first, then set GIF
-  img.src = '';
-  img.src = 'assets/' + file + '.gif';
-  img.dataset.mode = 'gif';
+  if (img && img.dataset.mode !== 'gif') {
+    img.src = '';
+    img.src = `assets/${file}.gif`;
+    img.dataset.mode = 'gif';
+  }
 });
 
 world.addEventListener('mouseout', e => {
   const mod = e.target.closest('.module');
-  if (!mod) return;
-  // Ignore if still within the same module (moving between child elements)
-  if (mod.contains(e.relatedTarget)) return;
-  const file = mod.dataset.file;
-  if (!file) return;
+  if (!mod || mod.contains(e.relatedTarget)) return;
+
+  mod.dataset.hovered = '';
+  applyModBaseScale(mod, modBaseScale);
+  mod.style.zIndex    = '';
+
   const img = mod.querySelector('img');
-  if (!img || img.dataset.mode !== 'gif') return;
-  img.src = 'assets/thumbs/' + file + '.webp';
-  img.dataset.mode = 'webp';
+  if (img && img.dataset.mode === 'gif') {
+    img.src = `assets/thumbs/${mod.dataset.file}.webp`;
+    img.dataset.mode = '';
+  }
 });
 
-// --- Camera ---
-let camX = TILE_W / 2 - window.innerWidth  / 2;
-let camY = TILE_H / 2 - window.innerHeight / 2;
-let scale = 1.0;
-const MIN_SCALE = 0.42, MAX_SCALE = 2.0;
+// GIF proximity preload
+let gifTimer = null;
+viewport.addEventListener('mousemove', e => {
+  clearTimeout(gifTimer);
+  gifTimer = setTimeout(() => {
+    const wx = e.clientX / scale + camX;
+    const wy = e.clientY / scale + camY;
+    const r  = CELL * 1.5;
 
-// Drift: 150° in screen coords from +X axis clockwise → lower-left direction
-// cos(150°) = -0.866 (left), sin(150°) = 0.5 (down)
-const DRIFT = 0.55;
-const DRIFT_DX = Math.cos(150 * Math.PI / 180) * DRIFT;  // ≈ -0.476 (left)
-const DRIFT_DY = Math.sin(150 * Math.PI / 180) * DRIFT;  // ≈  0.275 (down)
+    // Check nearby grid cells
+    const nearC0 = Math.floor((wx - r) / CELL), nearC1 = Math.floor((wx + r) / CELL);
+    const nearR0 = Math.floor((wy - r) / CELL), nearR1 = Math.floor((wy + r) / CELL);
+    for (let row = nearR0; row <= nearR1; row++) {
+      for (let col = nearC0; col <= nearC1; col++) {
+        const dx = wx - (col * CELL + IMG / 2), dy = wy - (row * CELL + IMG / 2);
+        if (dx * dx + dy * dy < r * r) preloadGif(moduleAt(col, row));
+      }
+    }
+  }, 80);
+});
 
-// --- Drag / inertia ---
+// ─── Drag state ───────────────────────────────────────────────────────────────
 let isDragging = false;
 let dragStartX, dragStartY, dragCamX0, dragCamY0;
 let velX = 0, velY = 0;
 let prevMX, prevMY, prevT;
 
-// --- Tile management ---
-let lastCenterCol = null, lastCenterRow = null;
-
-function updateTiles() {
-  const cc = Math.floor(camX / TILE_W);
-  const cr = Math.floor(camY / TILE_H);
-  if (cc === lastCenterCol && cr === lastCenterRow) return;
-  lastCenterCol = cc;
-  lastCenterRow = cr;
-
-  for (let sj = 0; sj < 3; sj++) {
-    for (let si = 0; si < 3; si++) {
-      fillSlot(slots[sj][si], cc + si - 1, cr + sj - 1);
-    }
-  }
-}
-
-// --- Culling: hide modules outside viewport + selective preload ---
-// Preload only modules in the inner viewport (no margin) — small set, high relevance
-let preloadFrame = 0;
-function updateCulling() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const cullMargin     = IMG * 1.2 / scale;   // slightly beyond screen
-  const preloadMargin  = IMG * 0.5 / scale;   // just inside screen edge
-
-  const left   = camX - cullMargin;
-  const top    = camY - cullMargin;
-  const right  = camX + vw / scale + cullMargin;
-  const bottom = camY + vh / scale + cullMargin;
-
-  // Preload boundary (inner area)
-  const pLeft   = camX + preloadMargin;
-  const pTop    = camY + preloadMargin;
-  const pRight  = camX + vw / scale - preloadMargin;
-  const pBottom = camY + vh / scale - preloadMargin;
-
-  // Collect candidates for preload this frame (stagger to avoid burst)
-  const preloadCandidates = [];
-
-  for (let sj = 0; sj < 3; sj++) {
-    for (let si = 0; si < 3; si++) {
-      const slot = slots[sj][si];
-      const tc = parseInt(slot.dataset.col);
-      const tr = parseInt(slot.dataset.row);
-      if (isNaN(tc)) continue;
-
-      const tx = tc * TILE_W;
-      const ty = tr * TILE_H;
-
-      if (tx + TILE_W < left || tx > right || ty + TILE_H < top || ty > bottom) {
-        slot.style.visibility = 'hidden';
-        continue;
-      }
-      slot.style.visibility = '';
-
-      const mods = slot.children;
-      for (let k = 0; k < mods.length; k++) {
-        const mod = mods[k];
-        const mx = tx + parseFloat(mod.style.left);
-        const my = ty + parseFloat(mod.style.top);
-        const vis = mx + IMG >= left && mx <= right && my + IMG >= top && my <= bottom;
-        mod.style.display = vis ? '' : 'none';
-
-        // If GIF was playing and module goes off-screen, revert to WebP thumbnail
-        if (!vis) {
-          const img = mod.firstChild;
-          if (img && img.dataset.mode === 'gif') {
-            img.src = 'assets/thumbs/' + mod.dataset.file + '.webp';
-            img.dataset.mode = 'webp';
-          }
-          continue;
-        }
-
-        // Collect visible modules in inner zone for GIF preloading
-        const file = mod.dataset.file;
-        if (file && mx >= pLeft && mx + IMG <= pRight && my >= pTop && my + IMG <= pBottom) {
-          preloadCandidates.push(file);
-        }
-      }
-    }
-  }
-
-  // Stagger preloads: process 2 candidates per frame to avoid network burst
-  preloadFrame = (preloadFrame + 1) % 3;
-  if (preloadFrame === 0 && preloadCandidates.length > 0) {
-    const toLoad = preloadCandidates.slice(0, 4);
-    toLoad.forEach(preloadGif);
-  }
-}
-
-function applyCamera() {
-  world.style.transform = `scale(${scale}) translate(${-camX}px,${-camY}px)`;
-}
-
-// --- Animation loop ---
+// ─── Animation loop ───────────────────────────────────────────────────────────
 let lastTS = 0;
+
 function loop(ts) {
   const dt = Math.min(ts - lastTS, 50) / 16.667;
   lastTS = ts;
 
-  // Drift always runs unless actively dragging
   if (!isDragging) {
-    camX += DRIFT_DX * dt;
-    camY += DRIFT_DY * dt;
+    camX += DRIFT_DX * dt / scale;
+    camY += DRIFT_DY * dt / scale;
   }
 
   if (!isDragging) {
@@ -373,21 +351,20 @@ function loop(ts) {
     }
   }
 
-  updateTiles();
+  updateModules();           // acts only when a grid boundary is crossed
+  updateModuleBaseScales();  // acts only when scale crosses a threshold
   applyCamera();
-  updateCulling();
+
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-// --- Mouse events ---
+// ─── Mouse drag ───────────────────────────────────────────────────────────────
 viewport.addEventListener('mousedown', e => {
   isDragging = true;
   viewport.classList.add('dragging');
-  dragStartX = e.clientX;
-  dragStartY = e.clientY;
-  dragCamX0  = camX;
-  dragCamY0  = camY;
+  dragStartX = e.clientX; dragStartY = e.clientY;
+  dragCamX0  = camX;      dragCamY0  = camY;
   velX = 0; velY = 0;
   prevMX = e.clientX; prevMY = e.clientY; prevT = performance.now();
   e.preventDefault();
@@ -395,13 +372,9 @@ viewport.addEventListener('mousedown', e => {
 
 window.addEventListener('mousemove', e => {
   if (!isDragging) return;
-  const dx = (e.clientX - dragStartX) / scale;
-  const dy = (e.clientY - dragStartY) / scale;
-  camX = dragCamX0 - dx;
-  camY = dragCamY0 - dy;
-
-  const now = performance.now();
-  const dt2 = now - prevT;
+  camX = dragCamX0 - (e.clientX - dragStartX) / scale;
+  camY = dragCamY0 - (e.clientY - dragStartY) / scale;
+  const now = performance.now(), dt2 = now - prevT;
   if (dt2 > 0) {
     velX = ((prevMX - e.clientX) / scale) / dt2 * 16;
     velY = ((prevMY - e.clientY) / scale) / dt2 * 16;
@@ -418,16 +391,14 @@ window.addEventListener('mouseup', () => {
   velY = Math.max(-cap, Math.min(cap, velY));
 });
 
-// --- Touch events ---
-let touchStartX, touchStartY, touchCamX0, touchCamY0;
+// ─── Touch drag ───────────────────────────────────────────────────────────────
+let touchCamX0, touchCamY0, touchStartX, touchStartY;
 
 viewport.addEventListener('touchstart', e => {
   if (e.touches.length !== 1) return;
-  isDragging = true;
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  touchCamX0  = camX;
-  touchCamY0  = camY;
+  isDragging  = true;
+  touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+  touchCamX0  = camX;                 touchCamY0  = camY;
   velX = 0; velY = 0;
 }, { passive: true });
 
@@ -437,33 +408,24 @@ viewport.addEventListener('touchmove', e => {
   camY = touchCamY0 - (e.touches[0].clientY - touchStartY) / scale;
 }, { passive: true });
 
-viewport.addEventListener('touchend', () => {
-  isDragging = false;
-}, { passive: true });
+viewport.addEventListener('touchend', () => { isDragging = false; }, { passive: true });
 
-// --- Wheel zoom ---
+// ─── Wheel zoom ───────────────────────────────────────────────────────────────
 viewport.addEventListener('wheel', e => {
   e.preventDefault();
-
-  const mx = e.clientX;
-  const my = e.clientY;
-
-  // World point under cursor
+  const mx = e.clientX, my = e.clientY;
   const wx = mx / scale + camX;
   const wy = my / scale + camY;
 
-  // Normalize delta for trackpad vs mouse wheel
   let delta = e.deltaY;
-  if (e.deltaMode === 1) delta *= 20;   // line mode
-  if (e.deltaMode === 2) delta *= 300;  // page mode
+  if (e.deltaMode === 1) delta *= 20;
+  if (e.deltaMode === 2) delta *= 300;
 
-  const factor = Math.pow(0.998, delta);
-  const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * factor));
-
+  const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * Math.pow(0.998, delta)));
   if (newScale !== scale) {
     scale = newScale;
-    camX = wx - mx / scale;
-    camY = wy - my / scale;
+    camX  = wx - mx / scale;
+    camY  = wy - my / scale;
   }
 }, { passive: false });
 </script>
