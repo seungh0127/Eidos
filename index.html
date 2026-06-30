@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF" />
+<meta name="color-scheme" content="light" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Eidos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +14,10 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-:root { font-size: 62.5%; } /* 1rem = 10px (design spec base) */
+:root {
+  font-size: 62.5%; /* 1rem = 10px (design spec base) */
+  color-scheme: light; /* Safari가 다크 모드 색상으로 판단하지 않도록 */
+}
 
 html {
   width: 100%;
