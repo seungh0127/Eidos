@@ -44,11 +44,7 @@ body {
 /* ── Gallery viewport ── */
 #viewport {
   position: fixed;
-  /* 갤러리 캔버스를 Safe Area 안쪽으로 클리핑 — Safe Area 구역은 .page 흰 배경이 채움 */
-  top: env(safe-area-inset-top, 0px);
-  left: env(safe-area-inset-left, 0px);
-  right: env(safe-area-inset-right, 0px);
-  bottom: env(safe-area-inset-bottom, 0px);
+  inset: 0; /* 갤러리 캔버스는 Safe Area 포함 전체 화면을 채움 */
   overflow: hidden;
   cursor: grab;
   user-select: none; -webkit-user-select: none;
@@ -78,6 +74,7 @@ body {
 /* ── Logo button — safe area 하단 ── */
 #logo-btn {
   position: fixed;
+  bottom: max(20px, constant(safe-area-inset-bottom));
   bottom: max(20px, env(safe-area-inset-bottom, 20px));
   left: 50%;
   transform: translateX(-50%);
@@ -90,7 +87,9 @@ body {
 /* ── Gyro toggle — safe area 우측 상단 ── */
 #gyro-toggle {
   position: fixed;
+  top: max(16px, constant(safe-area-inset-top));
   top: max(16px, env(safe-area-inset-top, 16px));
+  right: max(16px, constant(safe-area-inset-right));
   right: max(16px, env(safe-area-inset-right, 16px));
   z-index: 9999;
 
@@ -129,6 +128,7 @@ body {
 
 /* ── Gyro permission overlay ── */
 #gyro-overlay {
+  /* 배경은 Safe Area 포함 전체 화면을 덮음 — padding 없음 */
   position: fixed;
   inset: 0;
   width: 100%;
@@ -136,17 +136,27 @@ body {
   background: rgba(0, 0, 0, 0.80);
   z-index: 99998;
   display: none;
-  align-items: center;
-  justify-content: center;
   transition: opacity 0.4s ease;
-  /* 팝업 카드 위치만 safe area 안쪽으로 — 배경은 inset: 0 전체 커버 */
-  padding:
-    max(16px, env(safe-area-inset-top, 16px))
-    max(16px, env(safe-area-inset-right, 16px))
-    max(16px, env(safe-area-inset-bottom, 16px))
-    max(16px, env(safe-area-inset-left, 16px));
 }
 #gyro-overlay.visible { display: flex; }
+
+/* 팝업 카드 래퍼 — Safe Area 안쪽에서 카드 배치 */
+.motion-dialog-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100dvh;
+  padding-top: max(16px, constant(safe-area-inset-top));
+  padding-top: max(16px, env(safe-area-inset-top, 16px));
+  padding-right: max(16px, constant(safe-area-inset-right));
+  padding-right: max(16px, env(safe-area-inset-right, 16px));
+  padding-bottom: max(16px, constant(safe-area-inset-bottom));
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  padding-left: max(16px, constant(safe-area-inset-left));
+  padding-left: max(16px, env(safe-area-inset-left, 16px));
+  box-sizing: border-box;
+}
 
 .motion-dialog {
   display: flex;
@@ -259,6 +269,7 @@ body {
 
 <!-- Gyro permission popup (mobile only) -->
 <div id="gyro-overlay">
+  <div class="motion-dialog-wrapper">
   <div
     class="motion-dialog"
     role="dialog"
@@ -282,6 +293,7 @@ body {
     >
       <span class="motion-dialog-button-label">Enable<br>Motion</span>
     </button>
+  </div>
   </div>
 </div>
 
