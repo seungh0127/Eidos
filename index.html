@@ -254,18 +254,6 @@ let isDragging = false;
 let dragStartX, dragStartY, dragCamX0, dragCamY0;
 let velX = 0, velY = 0;
 let prevMX, prevMY, prevT;
-let userInteracting = false;
-let interactTimer;
-
-function setInteracting(on) {
-  if (on) {
-    userInteracting = true;
-    clearTimeout(interactTimer);
-  } else {
-    clearTimeout(interactTimer);
-    interactTimer = setTimeout(() => { userInteracting = false; }, 150);
-  }
-}
 
 // --- Tile management ---
 let lastCenterCol = null, lastCenterRow = null;
@@ -368,7 +356,8 @@ function loop(ts) {
   const dt = Math.min(ts - lastTS, 50) / 16.667;
   lastTS = ts;
 
-  if (!userInteracting) {
+  // Drift always runs unless actively dragging
+  if (!isDragging) {
     camX += DRIFT_DX * dt;
     camY += DRIFT_DY * dt;
   }
@@ -401,7 +390,6 @@ viewport.addEventListener('mousedown', e => {
   dragCamY0  = camY;
   velX = 0; velY = 0;
   prevMX = e.clientX; prevMY = e.clientY; prevT = performance.now();
-  setInteracting(true);
   e.preventDefault();
 });
 
@@ -428,7 +416,6 @@ window.addEventListener('mouseup', () => {
   const cap = 25;
   velX = Math.max(-cap, Math.min(cap, velX));
   velY = Math.max(-cap, Math.min(cap, velY));
-  setInteracting(false);
 });
 
 // --- Touch events ---
@@ -442,7 +429,6 @@ viewport.addEventListener('touchstart', e => {
   touchCamX0  = camX;
   touchCamY0  = camY;
   velX = 0; velY = 0;
-  setInteracting(true);
 }, { passive: true });
 
 viewport.addEventListener('touchmove', e => {
@@ -453,13 +439,11 @@ viewport.addEventListener('touchmove', e => {
 
 viewport.addEventListener('touchend', () => {
   isDragging = false;
-  setInteracting(false);
 }, { passive: true });
 
 // --- Wheel zoom ---
 viewport.addEventListener('wheel', e => {
   e.preventDefault();
-  setInteracting(true);
 
   const mx = e.clientX;
   const my = e.clientY;
