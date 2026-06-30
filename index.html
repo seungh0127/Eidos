@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eidos</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+#viewport {
+  position: fixed; inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#viewport.dragging { cursor: grabbing; }
+#world {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.tile {
+  position: absolute;
+  top: 0; left: 0;
+  will-change: transform;
+}
+.module {
+  position: absolute;
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center center;
+  z-index: 1;
+}
+.module:hover {
+  transform: scale(1.22);
+  z-index: 100;
+}
+#viewport.dragging .module {
+  transition: none;
+}
+.module img {
+  display: block;
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="world"></div>
+</div>
+<script>
+const MODULES = [
+  'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
+  'H-B-1','H-B-2','H-B-3','H-B-4','H-B-5',
+  'H-C-1','H-C-2','H-C-3','H-C-4','H-C-5',
+  'H-D-1','H-D-2','H-D-3','H-D-4',
+  'H-E-1','H-E-2',
+  'C-A-1','C-A-2','C-A-3',
+  'C-B-1','C-B-2','C-B-3',
+  'C-C-1','C-C-2','C-C-3',
+  'C-D-1','C-D-2',
+  'C-E-1','C-E-2','C-E-3',
+  'S-A-1','S-A-2','S-A-3',
+  'S-B-1','S-B-2','S-B-3',
+  'S-C-1','S-C-2','S-C-3',
+  'S-D-1','S-D-2','S-D-3',
+  'S-E-1','S-E-2','S-E-3',
+  'U-A-1','U-A-2',
+  'U-B-1','U-B-2','U-B-3',
+  'U-C-1','U-C-2',
+  'U-D-1','U-D-2',
+  'U-E-1','U-E-2','U-E-3',
+  'F-A-1','F-A-2','F-A-3',
+  'F-B-1','F-B-2',
+  'F-C-1','F-C-2','F-C-3',
+  'F-D-1','F-D-2','F-D-3',
+  'F-E-1','F-E-2',
+  'E-A-1','E-A-2','E-A-3',
+  'E-B-1','E-B-2',
+  'E-C-1','E-C-2',
+  'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
+  'L-A-2','L-A-3',
+  'L-B-1','L-B-2','L-B-3',
+  'L-C-1','L-C-2','L-C-3','L-C-4',
+  'L-D-1','L-D-2','L-D-3',
+  'L-E-1','L-E-2',
+  'L-F-1','L-F-2','L-F-3',
+  'L-G-1',
+  'EX-A-0','EX-A-1','EX-A-2',
+  'EX-B-1','EX-C-1','EX-D-1',
+];
+
+// --- Layout constants ---
+const IMG  = 200;
+const GAP  = 120;   // space between images
+const CELL = IMG + GAP;  // 320
+const COLS = 8;
+const ROWS = 14;    // 8×14 = 112 exactly
+const PAD  = 100;   // outer padding within each tile
+const TILE_W = PAD * 2 + COLS * CELL;  // 2760
+const TILE_H = PAD * 2 + ROWS * CELL;  // 4680
+
+// --- Seeded PRNG ---
+function mulberry32(seed) {
+  seed = seed >>> 0;
+  return function () {
+    seed = (seed + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Generate tile positions from (col, row) pair — cached for revisits
+const tileCache = new Map();
+
+function getTileData(col, row) {
+  const key = col + ',' + row;
+  if (tileCache.has(key)) return tileCache.get(key);
+
+  // Use a stable seed per tile position
+  const seedVal = (((col * 73856093) ^ (row * 19349663)) >>> 0) + 1;
+  const rng = mulberry32(seedVal);
+  const shuffled = seededShuffle(MODULES, rng);
+
+  const items = shuffled.map((file, i) => {
+    const c = i % COLS;
+    const r = Math.floor(i / COLS);
+    const x = PAD + c * CELL;
+    const y = PAD + r * CELL;
+    return { file, x, y };
+  });
+
+  tileCache.set(key, items);
+  return items;
+}
+
+// --- DOM ---
+const viewport = document.getElementById('viewport');
+const world    = document.getElementById('world');
+
+// Create 3×3 tile slot elements
+const slots = [];
+for (let sj = 0; sj < 3; sj++) {
+  slots[sj] = [];
+  for (let si = 0; si < 3; si++) {
+    const el = document.createElement('div');
+    el.className = 'tile';
+    el.dataset.col = 'x';
+    el.dataset.row = 'x';
+    world.appendChild(el);
+    slots[sj][si] = el;
+  }
+}
+
+function fillSlot(el, col, row) {
+  if (el.dataset.col === String(col) && el.dataset.row === String(row)) return;
+  el.dataset.col = col;
+  el.dataset.row = row;
+  el.style.transform = `translate(${col * TILE_W}px,${row * TILE_H}px)`;
+
+  const items = getTileData(col, row);
+  // Rebuild children
+  el.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  items.forEach(({ file, x, y }) => {
+    const mod = document.createElement('div');
+    mod.className = 'module';
+    mod.style.left = x + 'px';
+    mod.style.top  = y + 'px';
+    const img = document.createElement('img');
+    img.src = 'assets/' + file + '.gif';
+    img.alt = file;
+    mod.appendChild(img);
+    frag.appendChild(mod);
+  });
+  el.appendChild(frag);
+}
+
+// --- Camera ---
+let camX = TILE_W / 2 - window.innerWidth  / 2;
+let camY = TILE_H / 2 - window.innerHeight / 2;
+let scale = 1.1;   // midpoint between MIN and MAX
+const MIN_SCALE = 0.18, MAX_SCALE = 2.2;
+
+// Drift: content flows bottom → top (camera moves downward, camY increases)
+const DRIFT = 0.3;
+const DRIFT_DX = 0;
+const DRIFT_DY = DRIFT;
+
+// --- Drag / inertia ---
+let isDragging = false;
+let dragStartX, dragStartY, dragCamX0, dragCamY0;
+let velX = 0, velY = 0;
+let prevMX, prevMY, prevT;
+let userInteracting = false;
+let interactTimer;
+
+function setInteracting(on) {
+  if (on) {
+    userInteracting = true;
+    clearTimeout(interactTimer);
+  } else {
+    clearTimeout(interactTimer);
+    interactTimer = setTimeout(() => { userInteracting = false; }, 150);
+  }
+}
+
+// --- Tile management ---
+let lastCenterCol = null, lastCenterRow = null;
+
+function updateTiles() {
+  const cc = Math.floor(camX / TILE_W);
+  const cr = Math.floor(camY / TILE_H);
+  if (cc === lastCenterCol && cr === lastCenterRow) return;
+  lastCenterCol = cc;
+  lastCenterRow = cr;
+
+  for (let sj = 0; sj < 3; sj++) {
+    for (let si = 0; si < 3; si++) {
+      fillSlot(slots[sj][si], cc + si - 1, cr + sj - 1);
+    }
+  }
+}
+
+// --- Culling: hide modules outside viewport ---
+function updateCulling() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const margin = IMG * 1.5 / scale;
+  const left   = camX - margin;
+  const top    = camY - margin;
+  const right  = camX + vw / scale + margin;
+  const bottom = camY + vh / scale + margin;
+
+  for (let sj = 0; sj < 3; sj++) {
+    for (let si = 0; si < 3; si++) {
+      const slot = slots[sj][si];
+      const tc = parseInt(slot.dataset.col);
+      const tr = parseInt(slot.dataset.row);
+      if (isNaN(tc)) continue;
+
+      const tx = tc * TILE_W;
+      const ty = tr * TILE_H;
+
+      // Tile entirely outside?
+      if (tx + TILE_W < left || tx > right || ty + TILE_H < top || ty > bottom) {
+        slot.style.visibility = 'hidden';
+        continue;
+      }
+      slot.style.visibility = '';
+
+      const mods = slot.children;
+      for (let k = 0; k < mods.length; k++) {
+        const mod = mods[k];
+        const mx = tx + parseFloat(mod.style.left);
+        const my = ty + parseFloat(mod.style.top);
+        const vis = mx + IMG >= left && mx <= right && my + IMG >= top && my <= bottom;
+        mod.style.display = vis ? '' : 'none';
+
+        // Pause/resume GIF by toggling src (avoids costly frames off-screen)
+        const img = mod.firstChild;
+        if (img) {
+          if (!vis && img.src) {
+            img._src = img.src;
+            img.src = '';
+          } else if (vis && !img.src && img._src) {
+            img.src = img._src;
+          }
+        }
+      }
+    }
+  }
+}
+
+function applyCamera() {
+  world.style.transform = `scale(${scale}) translate(${-camX}px,${-camY}px)`;
+}
+
+// --- Animation loop ---
+let lastTS = 0;
+function loop(ts) {
+  const dt = Math.min(ts - lastTS, 50) / 16.667;
+  lastTS = ts;
+
+  if (!userInteracting) {
+    camX += DRIFT_DX * dt;
+    camY += DRIFT_DY * dt;
+  }
+
+  if (!isDragging) {
+    if (Math.abs(velX) > 0.05 || Math.abs(velY) > 0.05) {
+      camX += velX * dt;
+      camY += velY * dt;
+      velX *= Math.pow(0.88, dt);
+      velY *= Math.pow(0.88, dt);
+    } else {
+      velX = 0; velY = 0;
+    }
+  }
+
+  updateTiles();
+  applyCamera();
+  updateCulling();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// --- Mouse events ---
+viewport.addEventListener('mousedown', e => {
+  isDragging = true;
+  viewport.classList.add('dragging');
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  dragCamX0  = camX;
+  dragCamY0  = camY;
+  velX = 0; velY = 0;
+  prevMX = e.clientX; prevMY = e.clientY; prevT = performance.now();
+  setInteracting(true);
+  e.preventDefault();
+});
+
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = (e.clientX - dragStartX) / scale;
+  const dy = (e.clientY - dragStartY) / scale;
+  camX = dragCamX0 - dx;
+  camY = dragCamY0 - dy;
+
+  const now = performance.now();
+  const dt2 = now - prevT;
+  if (dt2 > 0) {
+    velX = ((prevMX - e.clientX) / scale) / dt2 * 16;
+    velY = ((prevMY - e.clientY) / scale) / dt2 * 16;
+  }
+  prevMX = e.clientX; prevMY = e.clientY; prevT = now;
+});
+
+window.addEventListener('mouseup', () => {
+  if (!isDragging) return;
+  isDragging = false;
+  viewport.classList.remove('dragging');
+  const cap = 25;
+  velX = Math.max(-cap, Math.min(cap, velX));
+  velY = Math.max(-cap, Math.min(cap, velY));
+  setInteracting(false);
+});
+
+// --- Touch events ---
+let touchStartX, touchStartY, touchCamX0, touchCamY0;
+
+viewport.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  isDragging = true;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchCamX0  = camX;
+  touchCamY0  = camY;
+  velX = 0; velY = 0;
+  setInteracting(true);
+}, { passive: true });
+
+viewport.addEventListener('touchmove', e => {
+  if (!isDragging || e.touches.length !== 1) return;
+  camX = touchCamX0 - (e.touches[0].clientX - touchStartX) / scale;
+  camY = touchCamY0 - (e.touches[0].clientY - touchStartY) / scale;
+}, { passive: true });
+
+viewport.addEventListener('touchend', () => {
+  isDragging = false;
+  setInteracting(false);
+}, { passive: true });
+
+// --- Wheel zoom ---
+viewport.addEventListener('wheel', e => {
+  e.preventDefault();
+  setInteracting(true);
+
+  const mx = e.clientX;
+  const my = e.clientY;
+
+  // World point under cursor
+  const wx = mx / scale + camX;
+  const wy = my / scale + camY;
+
+  // Normalize delta for trackpad vs mouse wheel
+  let delta = e.deltaY;
+  if (e.deltaMode === 1) delta *= 20;   // line mode
+  if (e.deltaMode === 2) delta *= 300;  // page mode
+
+  const factor = Math.pow(0.998, delta);
+  const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * factor));
+
+  if (newScale !== scale) {
+    scale = newScale;
+    camX = wx - mx / scale;
+    camY = wy - my / scale;
+  }
+}, { passive: false });
+</script>
+</body>
+</html>
