@@ -96,13 +96,14 @@ const MODULES = [
 
 // --- Layout constants ---
 const IMG  = 200;
-const GAP  = 120;   // space between images
-const CELL = IMG + GAP;  // 320
+const GAP  = 160;              // gap between images
+const CELL = IMG + GAP;        // 360
 const COLS = 8;
-const ROWS = 14;    // 8×14 = 112 exactly
-const PAD  = 100;   // outer padding within each tile
-const TILE_W = PAD * 2 + COLS * CELL;  // 2760
-const TILE_H = PAD * 2 + ROWS * CELL;  // 4680
+const ROWS = 14;               // 8×14 = 112 exactly
+// PAD = GAP/2 ensures the inter-tile gap equals the intra-tile gap (seamless)
+const PAD  = GAP / 2;          // 80
+const TILE_W = COLS * CELL;    // 2880
+const TILE_H = ROWS * CELL;    // 5040
 
 // --- Seeded PRNG ---
 function mulberry32(seed) {
@@ -193,13 +194,14 @@ function fillSlot(el, col, row) {
 // --- Camera ---
 let camX = TILE_W / 2 - window.innerWidth  / 2;
 let camY = TILE_H / 2 - window.innerHeight / 2;
-let scale = 1.1;   // midpoint between MIN and MAX
-const MIN_SCALE = 0.18, MAX_SCALE = 2.2;
+let scale = 1.0;
+const MIN_SCALE = 0.42, MAX_SCALE = 2.0;
 
-// Drift: content flows bottom → top (camera moves downward, camY increases)
-const DRIFT = 0.3;
-const DRIFT_DX = 0;
-const DRIFT_DY = DRIFT;
+// Drift: 150° in screen coords from +X axis clockwise → lower-left direction
+// cos(150°) = -0.866 (left), sin(150°) = 0.5 (down)
+const DRIFT = 0.55;
+const DRIFT_DX = Math.cos(150 * Math.PI / 180) * DRIFT;  // ≈ -0.476 (left)
+const DRIFT_DY = Math.sin(150 * Math.PI / 180) * DRIFT;  // ≈  0.275 (down)
 
 // --- Drag / inertia ---
 let isDragging = false;
