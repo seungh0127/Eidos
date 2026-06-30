@@ -35,11 +35,28 @@ body {
 .page {
   position: fixed;
   inset: 0;
-  background: #fff; /* Safe Area까지 흰색으로 채움 */
+  background: #fff;
   opacity: 0; pointer-events: none;
   transition: opacity 0.5s ease;
 }
 .page.active { opacity: 1; pointer-events: auto; }
+
+/* ── Safe Area 마스크 — 갤러리 모듈이 노치/홈 인디케이터 구역에 그려지지 않도록 ── */
+.safe-area-mask {
+  position: fixed;
+  left: 0; right: 0;
+  background: #fff;
+  z-index: 9990; /* 갤러리(하위) 위, 로고/토글(9999) 아래, 오버레이(99998) 아래 */
+  pointer-events: none;
+}
+.safe-area-mask-top {
+  top: 0;
+  height: env(safe-area-inset-top, 0px);
+}
+.safe-area-mask-bottom {
+  bottom: 0;
+  height: env(safe-area-inset-bottom, 0px);
+}
 
 /* ── Gallery viewport ── */
 #viewport {
@@ -234,6 +251,10 @@ body {
 </style>
 </head>
 <body>
+
+<!-- Safe Area masks: prevent dark gallery content from bleeding into notch/home-indicator zones -->
+<div class="safe-area-mask safe-area-mask-top" aria-hidden="true"></div>
+<div class="safe-area-mask safe-area-mask-bottom" aria-hidden="true"></div>
 
 <!-- Page 1: Gallery -->
 <div id="page1" class="page active">
