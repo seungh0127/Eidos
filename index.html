@@ -49,7 +49,7 @@ body {
   position: fixed;
   left: 0; right: 0;
   background: #fff;
-  z-index: 10000;
+  z-index: 999999; /* 팝업 오버레이(99998) 포함 모든 레이어 위 — Safe Area는 항상 흰색 */
   pointer-events: none;
 }
 .sa-bg-top {
@@ -637,7 +637,6 @@ function setThemeColor(color) {
 if (IS_MOBILE) {
   gyroOverlay.classList.add('visible');
   gyroToggleBtn.classList.add('visible');
-  setThemeColor('rgba(0,0,0,0.8)'); /* 팝업 오버레이 배경색으로 노치 덮기 */
 
   enableMotionBtn.addEventListener('click', async () => {
     try {
@@ -661,7 +660,6 @@ if (IS_MOBILE) {
     }
     // Fade out popup
     gyroOverlay.style.opacity = '0';
-    setThemeColor('#ffffff');
     setTimeout(() => {
       gyroOverlay.classList.remove('visible');
       gyroOverlay.style.opacity = '';
