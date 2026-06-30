@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Eidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden; background: #fff;
+  font-family: 'Roboto Mono', 'Pretendard Variable', 'Pretendard', sans-serif;
+}
 
 /* ── Page system ── */
 .page {
@@ -14,33 +21,15 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
   opacity: 0; pointer-events: none;
   transition: opacity 0.5s ease;
 }
-.page.active {
-  opacity: 1; pointer-events: auto;
-}
-
+.page.active { opacity: 1; pointer-events: auto; }
 #page2 { background: #fff; }
 
-/* ── Logo button ── */
-#logo-btn {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-}
-#logo-btn img {
-  display: block;
-  height: 72px;
-  width: auto;
-}
-
-/* ── Gallery page ── */
+/* ── Gallery viewport ── */
 #viewport {
   position: absolute; inset: 0; overflow: hidden;
-  cursor: grab; user-select: none; -webkit-user-select: none;
+  cursor: grab;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none;
 }
 #viewport.dragging { cursor: grabbing; }
 #world {
@@ -48,6 +37,8 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
   transform-origin: 0 0;
   will-change: transform;
 }
+
+/* ── Module ── */
 .module {
   position: absolute;
   transform-origin: center center;
@@ -55,9 +46,103 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
 }
 .module img {
   display: block;
-  width: 200px; height: 200px;
+  width: var(--mod-img, 200px);
+  height: var(--mod-img, 200px);
   object-fit: contain;
   pointer-events: none;
+}
+
+/* ── Logo button ── */
+#logo-btn {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom, 24px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+}
+#logo-btn img { display: block; height: 72px; width: auto; }
+
+/* ── Gyro toggle button ── */
+#gyro-toggle {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  right: max(16px, env(safe-area-inset-right, 16px));
+  z-index: 9999;
+  width: 56px; height: 56px;
+  border-radius: 28px;
+  background: #0099FF;
+  color: #fff;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+#gyro-toggle.visible { display: flex; }
+#gyro-toggle.off { background: #1a1a1a; }
+
+/* ── Gyro permission overlay ── */
+#gyro-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  z-index: 99998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease;
+}
+#gyro-overlay.visible { display: flex; }
+
+#gyro-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 44px 36px 40px;
+  width: min(340px, 88vw);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+#gyro-card h2 {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+#gyro-card p {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #666;
+  line-height: 1.65;
+}
+#enable-motion-btn {
+  margin-top: 24px;
+  width: 128px; height: 128px;
+  border-radius: 64px;
+  background: #0099FF;
+  color: #fff;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
 }
 </style>
 </head>
@@ -77,7 +162,25 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
 <div id="logo-btn">
   <img src="assets/Logo.svg" alt="Eidos">
 </div>
+
+<!-- Gyro toggle (shown on mobile only) -->
+<button id="gyro-toggle" aria-label="Toggle gyroscope">ON</button>
+
+<!-- Gyro permission popup (mobile only) -->
+<div id="gyro-overlay">
+  <div id="gyro-card">
+    <h2>Tilt your device<br>to explore</h2>
+    <p>기기를 기울여 다양한 로봇 모듈을<br>탐색해보세요</p>
+    <button id="enable-motion-btn">Enable<br>Motion</button>
+  </div>
+</div>
+
 <script>
+// ─── Device / capability detection ───────────────────────────────────────────
+const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+                  window.matchMedia('(pointer: coarse)').matches;
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // ─── Module list ──────────────────────────────────────────────────────────────
 const MODULES = [
   'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
@@ -120,12 +223,13 @@ const MODULES = [
   'EX-B-1','EX-C-1','EX-D-1',
 ];
 
-// ─── Grid layout ─────────────────────────────────────────────────────────────
-const IMG  = 200;
-const GAP  = 160;
-const CELL = IMG + GAP;   // 440 world px per grid cell
+// ─── Layout constants (responsive) ───────────────────────────────────────────
+const IMG  = IS_MOBILE ? 130 : 200;
+const GAP  = IS_MOBILE ? 100 : 160;
+const CELL = IMG + GAP;
+document.documentElement.style.setProperty('--mod-img', IMG + 'px');
 
-// ─── PRNG ─────────────────────────────────────────────────────────────────────
+// ─── PRNG ────────────────────────────────────────────────────────────────────
 function mulberry32(seed) {
   seed = seed >>> 0;
   return function () {
@@ -136,33 +240,32 @@ function mulberry32(seed) {
   };
 }
 
-// Deterministic module file for each grid position
 function moduleAt(c, r) {
   const seed = (((c * 73856093) ^ (r * 19349663)) >>> 0) + 1;
   const rng  = mulberry32(seed);
   return MODULES[Math.floor(rng() * MODULES.length)];
 }
 
-// ─── DOM elements ─────────────────────────────────────────────────────────────
-const world    = document.getElementById('world');
-const viewport = document.getElementById('viewport');
+// ─── DOM elements ────────────────────────────────────────────────────────────
+const world          = document.getElementById('world');
+const viewport       = document.getElementById('viewport');
+const gyroOverlay    = document.getElementById('gyro-overlay');
+const gyroToggleBtn  = document.getElementById('gyro-toggle');
+const enableMotionBtn = document.getElementById('enable-motion-btn');
 
 // ─── Element pool ─────────────────────────────────────────────────────────────
 const modulePool = [];
 
 function acquireModule() {
-  const el = modulePool.pop() || (() => {
+  return modulePool.pop() || (() => {
     const d = document.createElement('div');
     d.className = 'module';
-    const img = document.createElement('img');
-    d.appendChild(img);
+    d.appendChild(document.createElement('img'));
     return d;
   })();
-  return el;
 }
 
 function releaseModule(el) {
-  // Revert GIF to WebP before pooling
   const img = el.querySelector('img');
   if (img && img.dataset.mode === 'gif') {
     img.src = `assets/thumbs/${el.dataset.file}.webp`;
@@ -170,28 +273,25 @@ function releaseModule(el) {
   }
   el.style.transform = '';
   el.style.zIndex    = '';
+  el.dataset.hovered = '';
   if (modulePool.length < 300) modulePool.push(el);
 }
 
-// ─── Active modules ────────────────────────────────────────────────────────────
-// "c,r" → DOM element
+// ─── Active modules ───────────────────────────────────────────────────────────
 const active = new Map();
 
 function addModule(c, r) {
-  const key  = c + ',' + r;
+  const key = c + ',' + r;
   if (active.has(key)) return;
-
   const file = moduleAt(c, r);
   const el   = acquireModule();
   el.dataset.file = file;
   el.style.left   = (c * CELL) + 'px';
   el.style.top    = (r * CELL) + 'px';
-
   const img = el.querySelector('img');
   img.src          = `assets/thumbs/${file}.webp`;
   img.alt          = file;
   img.dataset.mode = '';
-
   applyModBaseScale(el, modBaseScale);
   world.appendChild(el);
   active.set(key, el);
@@ -205,34 +305,10 @@ function removeModule(key) {
   active.delete(key);
 }
 
-// ─── Module base scale (widens gap as zoom increases above 1.0) ───────────────
-// Returns a CSS scale < 1 applied to each module when zoomed in,
-// shrinking the image in world-space so the gap grows proportionally.
-function getModBaseScale(s) {
-  if (s >= 1.0) return 1.0;
-  return Math.max(0.65, 1.0 - (1.0 - s) * 0.3);
-}
-
-let modBaseScale = 1.0;
-
-function applyModBaseScale(el, mbs) {
-  el.style.transform = mbs < 1.0 ? `scale(${mbs.toFixed(4)})` : '';
-}
-
-function updateModuleBaseScales() {
-  const mbs = getModBaseScale(scale);
-  if (Math.abs(mbs - modBaseScale) < 0.0005) return;
-  modBaseScale = mbs;
-  for (const el of active.values()) {
-    if (el.dataset.hovered === '1') continue;   // don't interrupt hover
-    applyModBaseScale(el, mbs);
-  }
-}
-
 // ─── Camera ───────────────────────────────────────────────────────────────────
 let camX  = -window.innerWidth  / 2;
 let camY  = -window.innerHeight / 2;
-let scale = 1.0;
+let scale = IS_MOBILE ? 0.9 : 1.0;
 const MIN_SCALE = 0.35, MAX_SCALE = 1.5;
 
 const DRIFT    = 0.55;
@@ -243,27 +319,43 @@ function applyCamera() {
   world.style.transform = `scale(${scale}) translate(${-camX}px,${-camY}px)`;
 }
 
+// ─── Module base scale ────────────────────────────────────────────────────────
+function getModBaseScale(s) {
+  if (s >= 1.0) return 1.0;
+  return Math.max(0.65, 1.0 - (1.0 - s) * 0.3);
+}
+let modBaseScale = getModBaseScale(scale);
+
+function applyModBaseScale(el, mbs) {
+  el.style.transform = mbs < 1.0 ? `scale(${mbs.toFixed(4)})` : '';
+}
+
+function updateModuleBaseScales() {
+  const mbs = getModBaseScale(scale);
+  if (Math.abs(mbs - modBaseScale) < 0.0005) return;
+  modBaseScale = mbs;
+  for (const el of active.values()) {
+    if (el.dataset.hovered === '1') continue;
+    applyModBaseScale(el, mbs);
+  }
+}
+
 // ─── Viewport culling ─────────────────────────────────────────────────────────
-// Triggered only when grid-column or grid-row boundary is crossed.
 let lastBounds = null;
 
 function updateModules() {
   const vw = window.innerWidth, vh = window.innerHeight;
-  const margin = CELL;   // 1-cell render margin around viewport
-
-  // Grid range that should be rendered
+  const margin = CELL;
   const minC = Math.floor((camX - margin) / CELL);
   const maxC = Math.floor((camX + vw / scale + margin) / CELL);
   const minR = Math.floor((camY - margin) / CELL);
   const maxR = Math.floor((camY + vh / scale + margin) / CELL);
 
-  // Fast exit: nothing changed
   if (lastBounds &&
       minC === lastBounds.minC && maxC === lastBounds.maxC &&
       minR === lastBounds.minR && maxR === lastBounds.maxR) return;
   lastBounds = { minC, maxC, minR, maxR };
 
-  // Remove modules outside 2-cell remove margin
   const rm = CELL * 2;
   const rmMinC = Math.floor((camX - rm) / CELL);
   const rmMaxC = Math.floor((camX + vw / scale + rm) / CELL);
@@ -275,18 +367,12 @@ function updateModules() {
     const c = +key.slice(0, comma), r = +key.slice(comma + 1);
     if (c < rmMinC || c > rmMaxC || r < rmMinR || r > rmMaxR) removeModule(key);
   }
-
-  // Add modules in render range
-  for (let r = minR; r <= maxR; r++) {
+  for (let r = minR; r <= maxR; r++)
     for (let c = minC; c <= maxC; c++) addModule(c, r);
-  }
 
-  // Preload WebP for 2-cell margin zone
-  for (let r = rmMinR; r <= rmMaxR; r++) {
-    for (let c = rmMinC; c <= rmMaxC; c++) {
+  for (let r = rmMinR; r <= rmMaxR; r++)
+    for (let c = rmMinC; c <= rmMaxC; c++)
       if (!active.has(c + ',' + r)) preloadWebP(moduleAt(c, r));
-    }
-  }
 }
 
 // ─── WebP preload ─────────────────────────────────────────────────────────────
@@ -298,7 +384,7 @@ function preloadWebP(file) {
 }
 
 // ─── GIF cache ────────────────────────────────────────────────────────────────
-const gifCache     = new Map();
+const gifCache      = new Map();
 const MAX_GIF_CACHE = 16;
 
 function preloadGif(file) {
@@ -309,67 +395,174 @@ function preloadGif(file) {
   gifCache.set(file, img);
 }
 
-// ─── Hover (event delegation) ─────────────────────────────────────────────────
-world.addEventListener('mouseover', e => {
-  if (isDragging) return;
-  const mod = e.target.closest('.module');
-  if (!mod) return;
+function playGif(mod) {
   const file = mod.dataset.file;
   if (!file) return;
-
-  mod.dataset.hovered = '1';
-  mod.style.transform = `scale(${(modBaseScale * 1.22).toFixed(4)})`;
-  mod.style.zIndex    = '100';
-
   const img = mod.querySelector('img');
-  if (img && img.dataset.mode !== 'gif') {
-    img.src = '';
-    img.src = `assets/${file}.gif`;
-    img.dataset.mode = 'gif';
-  }
-});
+  if (!img || img.dataset.mode === 'gif') return;
+  img.src = '';
+  img.src = `assets/${file}.gif`;
+  img.dataset.mode = 'gif';
+}
 
-world.addEventListener('mouseout', e => {
-  const mod = e.target.closest('.module');
-  if (!mod || mod.contains(e.relatedTarget)) return;
-
-  mod.dataset.hovered = '';
-  applyModBaseScale(mod, modBaseScale);
-  mod.style.zIndex    = '';
-
+function revertGif(mod) {
   const img = mod.querySelector('img');
-  if (img && img.dataset.mode === 'gif') {
-    img.src = `assets/thumbs/${mod.dataset.file}.webp`;
-    img.dataset.mode = '';
+  if (!img || img.dataset.mode !== 'gif') return;
+  img.src = `assets/thumbs/${mod.dataset.file}.webp`;
+  img.dataset.mode = '';
+}
+
+// ─── Gyroscope state ──────────────────────────────────────────────────────────
+let gyroGranted    = false;  // permission obtained
+let gyroEnabled    = false;  // user has not toggled off
+let gyroActive     = false;  // not suppressed by touch
+let gyroCalib      = true;   // next event = set baseline
+let gyroBaseBeta   = 0, gyroBaseGamma = 0;
+let targetGyroX    = 0, targetGyroY = 0;
+let gyroVX         = 0, gyroVY = 0;
+let gyroResumeTimer = null;
+
+function calibrateGyro() {
+  gyroCalib     = true;
+  gyroBaseBeta  = 0; gyroBaseGamma = 0;
+  targetGyroX   = 0; targetGyroY   = 0;
+  gyroVX        = 0; gyroVY        = 0;
+}
+
+function onDeviceOrientation(e) {
+  if (!gyroEnabled) return;
+  if (gyroCalib) {
+    gyroBaseBeta  = e.beta  ?? 0;
+    gyroBaseGamma = e.gamma ?? 0;
+    gyroCalib = false;
+    return;
   }
-});
 
-// GIF proximity preload
-let gifTimer = null;
-viewport.addEventListener('mousemove', e => {
-  clearTimeout(gifTimer);
-  gifTimer = setTimeout(() => {
-    const wx = e.clientX / scale + camX;
-    const wy = e.clientY / scale + camY;
-    const r  = CELL * 1.5;
+  const db = (e.beta  ?? 0) - gyroBaseBeta;
+  const dg = (e.gamma ?? 0) - gyroBaseGamma;
 
-    // Check nearby grid cells
-    const nearC0 = Math.floor((wx - r) / CELL), nearC1 = Math.floor((wx + r) / CELL);
-    const nearR0 = Math.floor((wy - r) / CELL), nearR1 = Math.floor((wy + r) / CELL);
-    for (let row = nearR0; row <= nearR1; row++) {
-      for (let col = nearC0; col <= nearC1; col++) {
-        const dx = wx - (col * CELL + IMG / 2), dy = wy - (row * CELL + IMG / 2);
-        if (dx * dx + dy * dy < r * r) preloadGif(moduleAt(col, row));
+  // Axis mapping per screen orientation
+  const angle = screen.orientation?.angle ?? 0;
+  let tiltX, tiltY;
+  if      (angle === 0  ) { tiltX =  dg; tiltY =  db; }
+  else if (angle === 90 ) { tiltX = -db; tiltY =  dg; }
+  else if (angle === 180) { tiltX = -dg; tiltY = -db; }
+  else                    { tiltX =  db; tiltY = -dg; } // 270°
+
+  // Dead zone + normalize to [-1, 1]
+  const DZ = 3, MX = 20;
+  const norm = v => {
+    if (Math.abs(v) < DZ) return 0;
+    return Math.max(-1, Math.min(1, (v - Math.sign(v) * DZ) / (MX - DZ)));
+  };
+
+  // Only write targets — camera is moved in rAF loop
+  targetGyroX = norm(tiltX) * DRIFT * 2;
+  targetGyroY = norm(tiltY) * DRIFT * 2;
+}
+
+function attachOrientationChange() {
+  const handler = () => calibrateGyro();
+  if (screen.orientation?.addEventListener) {
+    screen.orientation.addEventListener('change', handler);
+  } else {
+    window.addEventListener('orientationchange', handler);
+  }
+}
+
+function enableGyro() {
+  gyroGranted = true;
+  gyroEnabled = true;
+  gyroActive  = true;
+  calibrateGyro();
+  window.addEventListener('deviceorientation', onDeviceOrientation);
+  attachOrientationChange();
+}
+
+// ─── Gyro permission popup (mobile only) ──────────────────────────────────────
+if (IS_MOBILE) {
+  gyroOverlay.classList.add('visible');
+  gyroToggleBtn.classList.add('visible');
+
+  enableMotionBtn.addEventListener('click', async () => {
+    try {
+      if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+        const perm = await DeviceOrientationEvent.requestPermission();
+        if (perm === 'granted') {
+          enableGyro();
+        } else {
+          gyroToggleBtn.classList.add('off');
+          gyroToggleBtn.textContent = 'OFF';
+        }
+      } else if ('DeviceOrientationEvent' in window) {
+        enableGyro();
+      } else {
+        gyroToggleBtn.classList.add('off');
+        gyroToggleBtn.textContent = 'OFF';
       }
+    } catch {
+      gyroToggleBtn.classList.add('off');
+      gyroToggleBtn.textContent = 'OFF';
     }
-  }, 80);
-});
+    // Fade out popup
+    gyroOverlay.style.opacity = '0';
+    setTimeout(() => {
+      gyroOverlay.classList.remove('visible');
+      gyroOverlay.style.opacity = '';
+    }, 400);
+  });
 
-// ─── Drag state ───────────────────────────────────────────────────────────────
+  // Gyro toggle button
+  gyroToggleBtn.addEventListener('click', () => {
+    if (!gyroGranted) return; // no permission yet
+    gyroEnabled = !gyroEnabled;
+    gyroActive  = gyroEnabled;
+    if (gyroEnabled) {
+      calibrateGyro();
+      gyroToggleBtn.textContent = 'ON';
+      gyroToggleBtn.classList.remove('off');
+    } else {
+      targetGyroX = 0; targetGyroY = 0;
+      gyroToggleBtn.textContent = 'OFF';
+      gyroToggleBtn.classList.add('off');
+    }
+  });
+}
+
+// ─── Drag / inertia state ─────────────────────────────────────────────────────
 let isDragging = false;
-let dragStartX, dragStartY, dragCamX0, dragCamY0;
 let velX = 0, velY = 0;
-let prevMX, prevMY, prevT;
+
+// Desktop
+let dragStartX, dragStartY, dragCamX0, dragCamY0, prevMX, prevMY, prevT;
+
+// Touch
+let touch1       = null;   // { x, y, camX, camY }
+let touchMoved   = false;
+let prevTX, prevTY, prevTT;
+let pinchState   = null;   // { dist0, scale0, wx, wy, midX, midY }
+
+// Press-and-hold (mobile GIF)
+let pressTimer    = null;
+let pressedModule = null;
+
+function activateModulePress(el) {
+  if (pressedModule) deactivateModulePress();
+  pressedModule = el;
+  el.dataset.hovered = '1';
+  el.style.zIndex = '100';
+  el.style.transform = `scale(${(modBaseScale * 1.175).toFixed(4)})`;
+  playGif(el);
+}
+
+function deactivateModulePress() {
+  if (!pressedModule) return;
+  pressedModule.dataset.hovered = '';
+  pressedModule.style.zIndex = '';
+  applyModBaseScale(pressedModule, modBaseScale);
+  revertGif(pressedModule);
+  pressedModule = null;
+}
 
 // ─── Animation loop ───────────────────────────────────────────────────────────
 let lastTS = 0;
@@ -379,10 +572,26 @@ function loop(ts) {
   lastTS = ts;
 
   if (!isDragging) {
-    camX += DRIFT_DX * dt / scale;
-    camY += DRIFT_DY * dt / scale;
+    // Gyro smoothing (low-pass filter)
+    gyroVX += (targetGyroX - gyroVX) * 0.1;
+    gyroVY += (targetGyroY - gyroVY) * 0.1;
+
+    if (!REDUCED_MOTION) {
+      if (IS_MOBILE && gyroEnabled && gyroActive) {
+        // Gyro drift — attenuate while inertia is strong
+        const inertiaLen = Math.hypot(velX, velY);
+        const gyroW = Math.max(0, 1 - inertiaLen / 6);
+        camX += gyroVX * dt / scale * gyroW;
+        camY += gyroVY * dt / scale * gyroW;
+      } else {
+        // Fixed drift (desktop + mobile fallback)
+        camX += DRIFT_DX * dt / scale;
+        camY += DRIFT_DY * dt / scale;
+      }
+    }
   }
 
+  // Inertia
   if (!isDragging) {
     if (Math.abs(velX) > 0.05 || Math.abs(velY) > 0.05) {
       camX += velX * dt;
@@ -394,76 +603,208 @@ function loop(ts) {
     }
   }
 
-  updateModules();           // acts only when a grid boundary is crossed
-  updateModuleBaseScales();  // acts only when scale crosses a threshold
+  updateModules();
+  updateModuleBaseScales();
   applyCamera();
-
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-// ─── Mouse drag ───────────────────────────────────────────────────────────────
-viewport.addEventListener('mousedown', e => {
-  isDragging = true;
-  viewport.classList.add('dragging');
-  dragStartX = e.clientX; dragStartY = e.clientY;
-  dragCamX0  = camX;      dragCamY0  = camY;
-  velX = 0; velY = 0;
-  prevMX = e.clientX; prevMY = e.clientY; prevT = performance.now();
-  e.preventDefault();
-});
+// ─── Desktop: mouse hover ─────────────────────────────────────────────────────
+if (!IS_MOBILE) {
+  world.addEventListener('mouseover', e => {
+    if (isDragging) return;
+    const mod = e.target.closest('.module');
+    if (!mod) return;
+    mod.dataset.hovered = '1';
+    mod.style.transform = `scale(${(modBaseScale * 1.22).toFixed(4)})`;
+    mod.style.zIndex    = '100';
+    playGif(mod);
+  });
 
-window.addEventListener('mousemove', e => {
-  if (!isDragging) return;
-  camX = dragCamX0 - (e.clientX - dragStartX) / scale;
-  camY = dragCamY0 - (e.clientY - dragStartY) / scale;
-  const now = performance.now(), dt2 = now - prevT;
-  if (dt2 > 0) {
-    velX = ((prevMX - e.clientX) / scale) / dt2 * 16;
-    velY = ((prevMY - e.clientY) / scale) / dt2 * 16;
-  }
-  prevMX = e.clientX; prevMY = e.clientY; prevT = now;
-});
+  world.addEventListener('mouseout', e => {
+    const mod = e.target.closest('.module');
+    if (!mod || mod.contains(e.relatedTarget)) return;
+    mod.dataset.hovered = '';
+    applyModBaseScale(mod, modBaseScale);
+    mod.style.zIndex = '';
+    revertGif(mod);
+  });
 
-window.addEventListener('mouseup', () => {
-  if (!isDragging) return;
-  isDragging = false;
-  viewport.classList.remove('dragging');
-  const cap = 25;
-  velX = Math.max(-cap, Math.min(cap, velX));
-  velY = Math.max(-cap, Math.min(cap, velY));
-});
+  // GIF proximity preload (desktop)
+  let gifTimer = null;
+  viewport.addEventListener('mousemove', e => {
+    clearTimeout(gifTimer);
+    gifTimer = setTimeout(() => {
+      const wx = e.clientX / scale + camX;
+      const wy = e.clientY / scale + camY;
+      const r  = CELL * 1.5;
+      const c0 = Math.floor((wx - r) / CELL), c1 = Math.floor((wx + r) / CELL);
+      const r0 = Math.floor((wy - r) / CELL), r1 = Math.floor((wy + r) / CELL);
+      for (let row = r0; row <= r1; row++)
+        for (let col = c0; col <= c1; col++) {
+          const dx = wx - (col * CELL + IMG / 2), dy = wy - (row * CELL + IMG / 2);
+          if (dx * dx + dy * dy < r * r) preloadGif(moduleAt(col, row));
+        }
+    }, 80);
+  });
+}
 
-// ─── Touch drag ───────────────────────────────────────────────────────────────
-let touchCamX0, touchCamY0, touchStartX, touchStartY;
+// ─── Desktop: mouse drag ──────────────────────────────────────────────────────
+if (!IS_MOBILE) {
+  viewport.addEventListener('mousedown', e => {
+    isDragging = true;
+    viewport.classList.add('dragging');
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    dragCamX0  = camX;      dragCamY0  = camY;
+    velX = 0; velY = 0;
+    prevMX = e.clientX; prevMY = e.clientY; prevT = performance.now();
+    e.preventDefault();
+  });
 
-viewport.addEventListener('touchstart', e => {
-  if (e.touches.length !== 1) return;
-  isDragging  = true;
-  touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-  touchCamX0  = camX;                 touchCamY0  = camY;
-  velX = 0; velY = 0;
-}, { passive: true });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    camX = dragCamX0 - (e.clientX - dragStartX) / scale;
+    camY = dragCamY0 - (e.clientY - dragStartY) / scale;
+    const now = performance.now(), dt2 = now - prevT;
+    if (dt2 > 0) {
+      velX = ((prevMX - e.clientX) / scale) / dt2 * 16;
+      velY = ((prevMY - e.clientY) / scale) / dt2 * 16;
+    }
+    prevMX = e.clientX; prevMY = e.clientY; prevT = now;
+  });
 
-viewport.addEventListener('touchmove', e => {
-  if (!isDragging || e.touches.length !== 1) return;
-  camX = touchCamX0 - (e.touches[0].clientX - touchStartX) / scale;
-  camY = touchCamY0 - (e.touches[0].clientY - touchStartY) / scale;
-}, { passive: true });
+  window.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    viewport.classList.remove('dragging');
+    const cap = 25;
+    velX = Math.max(-cap, Math.min(cap, velX));
+    velY = Math.max(-cap, Math.min(cap, velY));
+  });
+}
 
-viewport.addEventListener('touchend', () => { isDragging = false; }, { passive: true });
+// ─── Mobile: touch handlers ───────────────────────────────────────────────────
+if (IS_MOBILE) {
+  viewport.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      // Pinch zoom start
+      clearTimeout(pressTimer);
+      deactivateModulePress();
+      isDragging = false;
+      touch1 = null;
 
-// ─── Wheel zoom ───────────────────────────────────────────────────────────────
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const midX = (t0.clientX + t1.clientX) / 2;
+      const midY = (t0.clientY + t1.clientY) / 2;
+      pinchState = {
+        dist0: dist, scale0: scale,
+        wx: midX / scale + camX,
+        wy: midY / scale + camY,
+        midX, midY,
+      };
+      return;
+    }
+
+    if (e.touches.length !== 1) return;
+    pinchState = null;
+
+    const t = e.touches[0];
+    touch1    = { x: t.clientX, y: t.clientY, camX, camY };
+    touchMoved = false;
+    isDragging = false;
+    velX = 0; velY = 0;
+    prevTX = t.clientX; prevTY = t.clientY; prevTT = performance.now();
+
+    // Suppress gyro during touch
+    clearTimeout(gyroResumeTimer);
+    gyroActive = false;
+
+    // Press-and-hold → GIF
+    clearTimeout(pressTimer);
+    const tx = t.clientX, ty = t.clientY;
+    pressTimer = setTimeout(() => {
+      if (!touchMoved) {
+        const el = document.elementFromPoint(tx, ty)?.closest?.('.module');
+        if (el) activateModulePress(el);
+      }
+    }, 180);
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', e => {
+    e.preventDefault();
+
+    // Pinch
+    if (e.touches.length === 2 && pinchState) {
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE,
+        pinchState.scale0 * dist / pinchState.dist0));
+      scale = newScale;
+      camX  = pinchState.wx - pinchState.midX / scale;
+      camY  = pinchState.wy - pinchState.midY / scale;
+      lastBounds = null;
+      return;
+    }
+
+    if (!touch1 || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touch1.x;
+    const dy = t.clientY - touch1.y;
+
+    if (!touchMoved && Math.hypot(dx, dy) > 8) {
+      touchMoved = true;
+      clearTimeout(pressTimer);
+      deactivateModulePress();
+      isDragging = true;
+    }
+
+    if (isDragging) {
+      camX = touch1.camX - dx / scale;
+      camY = touch1.camY - dy / scale;
+      const now = performance.now(), dt2 = now - prevTT;
+      if (dt2 > 0) {
+        velX = ((prevTX - t.clientX) / scale) / dt2 * 16;
+        velY = ((prevTY - t.clientY) / scale) / dt2 * 16;
+      }
+      prevTX = t.clientX; prevTY = t.clientY; prevTT = now;
+    }
+  }, { passive: false });
+
+  viewport.addEventListener('touchend', e => {
+    if (e.touches.length > 0) return;
+
+    clearTimeout(pressTimer);
+    deactivateModulePress();
+    isDragging = false;
+    touch1     = null;
+    pinchState = null;
+
+    const cap = 25;
+    velX = Math.max(-cap, Math.min(cap, velX));
+    velY = Math.max(-cap, Math.min(cap, velY));
+
+    // Resume gyro after delay
+    if (gyroEnabled) {
+      clearTimeout(gyroResumeTimer);
+      gyroResumeTimer = setTimeout(() => {
+        calibrateGyro();
+        gyroActive = true;
+      }, 400);
+    }
+  }, { passive: true });
+}
+
+// ─── Wheel zoom (desktop) ─────────────────────────────────────────────────────
 viewport.addEventListener('wheel', e => {
   e.preventDefault();
   const mx = e.clientX, my = e.clientY;
   const wx = mx / scale + camX;
   const wy = my / scale + camY;
-
   let delta = e.deltaY;
   if (e.deltaMode === 1) delta *= 20;
   if (e.deltaMode === 2) delta *= 300;
-
   const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * Math.pow(0.998, delta)));
   if (newScale !== scale) {
     scale = newScale;
@@ -471,6 +812,9 @@ viewport.addEventListener('wheel', e => {
     camY  = wy - my / scale;
   }
 }, { passive: false });
+
+// ─── Resize: keep camera stable ───────────────────────────────────────────────
+window.addEventListener('resize', () => { lastBounds = null; });
 
 // ─── Page toggle ──────────────────────────────────────────────────────────────
 const page1   = document.getElementById('page1');
