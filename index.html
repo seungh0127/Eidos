@@ -41,6 +41,28 @@ body {
 }
 .page.active { opacity: 1; pointer-events: auto; }
 
+/* ── Safe Area 전용 흰색 배경 레이어 ──────────────────────────────────────────
+   갤러리 모듈의 어두운 배경이 노치/홈 인디케이터 구역에 노출되지 않도록
+   z-index: 10000 (갤러리·UI버튼 위, 팝업 오버레이 99998 아래)으로 덮음.
+   로고·토글은 Safe Area 바깥에 배치되어 시각적 충돌 없음. ─────────────────── */
+.sa-bg {
+  position: fixed;
+  left: 0; right: 0;
+  background: #fff;
+  z-index: 10000;
+  pointer-events: none;
+}
+.sa-bg-top {
+  top: 0;
+  height: constant(safe-area-inset-top);
+  height: env(safe-area-inset-top, 0px);
+}
+.sa-bg-bottom {
+  bottom: 0;
+  height: constant(safe-area-inset-bottom);
+  height: env(safe-area-inset-bottom, 0px);
+}
+
 /* ── Gallery viewport ── */
 #viewport {
   position: fixed;
@@ -248,6 +270,10 @@ body {
 </style>
 </head>
 <body>
+
+<!-- Safe Area 흰색 배경 레이어 (노치·홈 인디케이터 구역이 검은색으로 노출되지 않도록) -->
+<div class="sa-bg sa-bg-top" aria-hidden="true"></div>
+<div class="sa-bg sa-bg-bottom" aria-hidden="true"></div>
 
 <!-- Page 1: Gallery -->
 <div id="page1" class="page active">
