@@ -125,14 +125,14 @@ body {
 
 #about-text {
   font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: clamp(16px, 2.5vw, 38px);
+  font-size: clamp(18px, 2.75vw, 42px);
   font-weight: 700;
   line-height: 1.38;
   letter-spacing: -0.02em;
   color: #111;
   text-align: center;
   max-width: min(1200px, 88vw);
-  margin-bottom: clamp(28px, 4vh, 52px);
+  margin-bottom: clamp(36px, 5.5vh, 64px);
   word-break: keep-all;
 }
 
@@ -153,7 +153,7 @@ body {
 }
 
 .word-inner.revealed {
-  animation: wordUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: wordUp 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes wordUp {
@@ -166,7 +166,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  margin-bottom: clamp(14px, 2vh, 22px);
+  margin-bottom: clamp(36px, 5.5vh, 64px);
   flex-wrap: nowrap;
 }
 
@@ -190,7 +190,7 @@ body {
 .credit-role {
   font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(11px, 0.9vw, 13px);
-  font-weight: 400;
+  font-weight: 300;
   color: #888;
   line-height: 1.3;
 }
@@ -198,7 +198,7 @@ body {
 .credit-name {
   font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(12px, 1vw, 15px);
-  font-weight: 700;
+  font-weight: 500;
   color: #404040;
   line-height: 1.3;
 }
@@ -1250,7 +1250,7 @@ function startTyping() {
   });
 
   // Stagger reveal: each word slides up with delay
-  const stagger = 45; // ms between words
+  const stagger = 70; // ms between words
   inners.forEach((inner, i) => {
     const t = setTimeout(() => {
       inner.style.animationDelay = '0ms';
