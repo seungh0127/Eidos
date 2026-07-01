@@ -165,7 +165,7 @@ body {
   font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(18px, 2.6vw, 40px);
   font-weight: 500;
-  line-height: 1.38;
+  line-height: 1.33;
   letter-spacing: -0.02em;
   color: #0D92FF;
   text-align: center;
@@ -180,7 +180,7 @@ body {
   font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(18px, 2.6vw, 40px);
   font-weight: 500;
-  line-height: 1.38;
+  line-height: 1.33;
   letter-spacing: -0.02em;
   color: #111;
   text-align: center;
@@ -341,7 +341,7 @@ body {
   #about-badge { font-size: 1.5rem; padding: 1.1rem 2.4rem; }
   #about-copy { font-size: 1.2rem; }
 
-  /* Gradient blur overlays */
+  /* Gradient overlays */
   .about-blur-top,
   .about-blur-bottom {
     display: block;
@@ -349,28 +349,18 @@ body {
     left: 0; right: 0;
     pointer-events: none;
     z-index: 500;
-    overflow: hidden;
+    background: linear-gradient(180deg, color(display-p3 1 1 1 / 0.00) 0%, color(display-p3 1 1 1) 50%, color(display-p3 1 1 1) 100%);
   }
 
   .about-blur-top {
     top: 0;
     height: 17.8rem;
+    background: linear-gradient(180deg, color(display-p3 1 1 1) 0%, color(display-p3 1 1 1) 50%, color(display-p3 1 1 1 / 0.00) 100%);
   }
 
   .about-blur-bottom {
     bottom: 0;
     height: 22.6rem;
-  }
-
-  /* White gradient sits on top of blur layers */
-  .about-blur-top::after,
-  .about-blur-bottom::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, color(display-p3 1 1 1 / 0.00) 0%, color(display-p3 1 1 1) 100%);
-    pointer-events: none;
-    z-index: 1;
   }
 }
 
@@ -627,7 +617,7 @@ body {
       <a id="about-badge" href="https://www.newformative.com/" target="_blank" rel="noopener">2026 MEP Exhibition ⟨everyelse⟩</a>
       <div class="about-spotlight" id="badge-spotlight" aria-hidden="true"></div>
     </div>
-    <p id="about-copy">© 2026 Samsung Design Membership All Rights Reserved</p>
+    <p id="about-copy">© 2026 Samsung Design Membership<br>All Rights Reserved</p>
   </div>
   </div><!-- /about-scroll -->
   <div class="about-blur-top" aria-hidden="true"></div>
@@ -1413,31 +1403,6 @@ function startTyping() {
     revealTimers.push(t);
   });
 }
-
-// ── About progressive blur (mobile) ──────────────────────────────────────────
-(function() {
-  function buildProgressiveBlur(el, maxBlur, n) {
-    for (let i = 0; i < n; i++) {
-      const blur    = (i / (n - 1)) * maxBlur;
-      const y0      = (i / n) * 100;
-      const y1      = ((i + 1) / n) * 100;
-      const mStart  = Math.max(0,   y0 - 1.5);
-      const mEnd    = Math.min(100, y1 + 1.5);
-      const mask    = `linear-gradient(to bottom,transparent ${mStart}%,black ${y0}%,black ${y1}%,transparent ${mEnd}%)`;
-      const layer   = document.createElement('div');
-      layer.style.cssText = `position:absolute;inset:0;pointer-events:none;` +
-        `-webkit-backdrop-filter:blur(${blur.toFixed(1)}px);` +
-        `backdrop-filter:blur(${blur.toFixed(1)}px);` +
-        `-webkit-mask-image:${mask};mask-image:${mask};`;
-      el.appendChild(layer);
-    }
-  }
-
-  if (window.matchMedia('(max-width: 768px)').matches) {
-    buildProgressiveBlur(document.querySelector('.about-blur-top'),    28, 10);
-    buildProgressiveBlur(document.querySelector('.about-blur-bottom'), 28, 10);
-  }
-})();
 
 // ── About spotlight: text mask reveal ────────────────────────────────────────
 (function() {
