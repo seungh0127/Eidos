@@ -278,6 +278,102 @@ body {
   text-align: center;
 }
 
+/* ── About page: desktop scroll wrapper (no-op) ── */
+#about-scroll {
+  position: static;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── About page: gradient blur overlays (mobile only) ── */
+.about-blur-top,
+.about-blur-bottom {
+  display: none;
+}
+
+/* ── About page: mobile ── */
+@media (max-width: 768px) {
+  #about-scroll {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 1;
+  }
+
+  #about-wrap {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 17.8rem 3.2rem 22.6rem;
+    min-height: 100%;
+    box-sizing: border-box;
+  }
+
+  #about-text-container {
+    max-width: 100%;
+    margin-bottom: 5.6rem;
+  }
+
+  #about-text,
+  #about-text-blue {
+    font-size: clamp(30px, 8.5vw, 44px);
+    line-height: 1.32;
+  }
+
+  #about-credits {
+    flex-direction: column;
+    align-items: center;
+    gap: 3.2rem;
+    margin-bottom: 5.6rem;
+  }
+
+  .credit-divider { display: none; }
+
+  .credit-item { align-items: center; }
+
+  .credit-role { font-size: 1.4rem; }
+  .credit-name { font-size: 1.6rem; }
+
+  #about-badge-wrap { margin-bottom: 1.4rem; }
+  #about-badge { font-size: 1.5rem; padding: 1.1rem 2.4rem; }
+  #about-copy { font-size: 1.2rem; }
+
+  /* Gradient blur overlays */
+  .about-blur-top,
+  .about-blur-bottom {
+    display: block;
+    position: absolute;
+    left: 0; right: 0;
+    pointer-events: none;
+    z-index: 500;
+    overflow: hidden;
+  }
+
+  .about-blur-top {
+    top: 0;
+    height: 17.8rem;
+  }
+
+  .about-blur-bottom {
+    bottom: 0;
+    height: 22.6rem;
+  }
+
+  /* White gradient sits on top of blur layers */
+  .about-blur-top::after,
+  .about-blur-bottom::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, color(display-p3 1 1 1 / 0.00) 0%, color(display-p3 1 1 1) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
 /* ── Main navigation ── */
 #main-nav {
   position: fixed;
@@ -500,6 +596,7 @@ body {
 
 <!-- Page 2: About -->
 <div id="page2" class="page">
+  <div id="about-scroll">
   <div id="about-wrap">
     <div id="about-text-container">
       <p id="about-text"></p>
@@ -532,6 +629,9 @@ body {
     </div>
     <p id="about-copy">© 2026 Samsung Design Membership All Rights Reserved</p>
   </div>
+  </div><!-- /about-scroll -->
+  <div class="about-blur-top" aria-hidden="true"></div>
+  <div class="about-blur-bottom" aria-hidden="true"></div>
 </div>
 
 <!-- Page 3: Possibilities -->
@@ -1313,6 +1413,31 @@ function startTyping() {
     revealTimers.push(t);
   });
 }
+
+// ── About progressive blur (mobile) ──────────────────────────────────────────
+(function() {
+  function buildProgressiveBlur(el, maxBlur, n) {
+    for (let i = 0; i < n; i++) {
+      const blur    = (i / (n - 1)) * maxBlur;
+      const y0      = (i / n) * 100;
+      const y1      = ((i + 1) / n) * 100;
+      const mStart  = Math.max(0,   y0 - 1.5);
+      const mEnd    = Math.min(100, y1 + 1.5);
+      const mask    = `linear-gradient(to bottom,transparent ${mStart}%,black ${y0}%,black ${y1}%,transparent ${mEnd}%)`;
+      const layer   = document.createElement('div');
+      layer.style.cssText = `position:absolute;inset:0;pointer-events:none;` +
+        `-webkit-backdrop-filter:blur(${blur.toFixed(1)}px);` +
+        `backdrop-filter:blur(${blur.toFixed(1)}px);` +
+        `-webkit-mask-image:${mask};mask-image:${mask};`;
+      el.appendChild(layer);
+    }
+  }
+
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    buildProgressiveBlur(document.querySelector('.about-blur-top'),    28, 10);
+    buildProgressiveBlur(document.querySelector('.about-blur-bottom'), 28, 10);
+  }
+})();
 
 // ── About spotlight: text mask reveal ────────────────────────────────────────
 (function() {
