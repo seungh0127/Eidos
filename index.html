@@ -110,6 +110,43 @@ body {
 }
 #logo-btn img { display: block; height: 72px; width: auto; }
 
+/* ── Main navigation ── */
+#main-nav {
+  position: fixed;
+  top: max(12px, constant(safe-area-inset-top));
+  top: max(12px, env(safe-area-inset-top, 12px));
+  left: max(14px, constant(safe-area-inset-left));
+  left: max(14px, env(safe-area-inset-left, 14px));
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  mix-blend-mode: difference; /* 컨테이너에 적용 — 페이지 배경과 올바르게 블렌딩 */
+}
+.nav-link {
+  font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: #808080; /* difference 후 흰 배경에서 #7F7F7F로 표시 */
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.3s ease;
+}
+.nav-link.active {
+  color: #FFFFFF; /* difference 후 흰 배경에서 #000000, 어두운 배경에서 밝게 표시 */
+}
+@media (max-width: 768px) {
+  .nav-link { font-size: 20px; }
+}
+
+/* ── Page 3: Possibilities ── */
+#page3 { background: #111111; }
+
 /* ── Gyro toggle — safe area 우측 상단 ── */
 #gyro-toggle {
   position: fixed;
@@ -279,6 +316,12 @@ body {
 <div class="sa-bg sa-bg-top" aria-hidden="true"></div>
 <div class="sa-bg sa-bg-bottom" aria-hidden="true"></div>
 
+<!-- Navigation -->
+<nav id="main-nav" aria-label="Main navigation">
+  <a id="nav-about" class="nav-link" href="#" role="button">About</a>
+  <a id="nav-possibilities" class="nav-link" href="#" role="button">Possibilities</a>
+</nav>
+
 <!-- Page 1: Gallery -->
 <div id="page1" class="page active">
   <div id="viewport">
@@ -286,8 +329,11 @@ body {
   </div>
 </div>
 
-<!-- Page 2: blank -->
+<!-- Page 2: About -->
 <div id="page2" class="page"></div>
+
+<!-- Page 3: Possibilities -->
+<div id="page3" class="page"></div>
 
 <!-- Logo: always on top, toggles pages -->
 <div id="logo-btn">
@@ -977,20 +1023,24 @@ window.addEventListener('resize', () => { lastBounds = null; });
 // ─── Page toggle ──────────────────────────────────────────────────────────────
 const page1   = document.getElementById('page1');
 const page2   = document.getElementById('page2');
+const page3   = document.getElementById('page3');
 const logoBtn = document.getElementById('logo-btn');
+const navAbout         = document.getElementById('nav-about');
+const navPossibilities = document.getElementById('nav-possibilities');
 let   currentPage = 1;
 
-logoBtn.addEventListener('click', () => {
-  if (currentPage === 1) {
-    page1.classList.remove('active');
-    page2.classList.add('active');
-    currentPage = 2;
-  } else {
-    page2.classList.remove('active');
-    page1.classList.add('active');
-    currentPage = 1;
-  }
-});
+function goToPage(n) {
+  [page1, page2, page3].forEach(p => p.classList.remove('active'));
+  [navAbout, navPossibilities].forEach(l => l.classList.remove('active'));
+  if (n === 1) { page1.classList.add('active'); }
+  if (n === 2) { page2.classList.add('active'); navAbout.classList.add('active'); }
+  if (n === 3) { page3.classList.add('active'); navPossibilities.classList.add('active'); }
+  currentPage = n;
+}
+
+logoBtn.addEventListener('click', () => goToPage(1));
+navAbout.addEventListener('click', e => { e.preventDefault(); goToPage(2); });
+navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3); });
 </script>
 </body>
 </html>
