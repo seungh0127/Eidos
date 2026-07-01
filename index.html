@@ -126,7 +126,7 @@ body {
 #about-text-container {
   position: relative;
   max-width: min(1200px, 88vw);
-  margin-bottom: clamp(36px, 5.5vh, 64px);
+  margin-bottom: clamp(40px, 6vh, 72px);
   overflow: hidden;
   isolation: isolate;
 }
@@ -139,6 +139,8 @@ body {
   isolation: isolate;
   border-radius: 100px;
 }
+
+#about-copy br { display: none; }
 
 /* Badge spotlight (glow on dark bg) */
 .about-spotlight {
@@ -218,7 +220,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  margin-bottom: clamp(36px, 5.5vh, 64px);
+  margin-bottom: clamp(40px, 6vh, 72px);
   flex-wrap: nowrap;
 }
 
@@ -611,7 +613,7 @@ body {
       <a id="about-badge" href="https://www.newformative.com/" target="_blank" rel="noopener">2026 MEP Exhibition ⟨everyelse⟩</a>
       <div class="about-spotlight" id="badge-spotlight" aria-hidden="true"></div>
     </div>
-    <p id="about-copy">© 2026 Samsung Design Membership<br>All Rights Reserved</p>
+    <p id="about-copy">© 2026 Samsung Design Membership <br>All Rights Reserved</p>
   </div>
   </div><!-- /about-scroll -->
   <div class="about-blur-bottom" aria-hidden="true"></div>
