@@ -1044,7 +1044,39 @@ function goToPage(n) {
   currentPage = n;
 }
 
-logoBtn.addEventListener('click', () => goToPage(1));
+const INIT_CAM_X = -window.innerWidth  / 2;
+const INIT_CAM_Y = -window.innerHeight / 2;
+const INIT_SCALE = IS_MOBILE ? 0.75 : 1.0;
+
+let resetAnim = null;
+
+function resetCamera() {
+  if (resetAnim) cancelAnimationFrame(resetAnim);
+  const startX = camX, startY = camY, startScale = scale;
+  const startTime = performance.now();
+  const duration = 600;
+
+  function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+  function step(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    const e = ease(t);
+    camX  = startX  + (INIT_CAM_X - startX)  * e;
+    camY  = startY  + (INIT_CAM_Y - startY)  * e;
+    scale = startScale + (INIT_SCALE - startScale) * e;
+    velX = 0; velY = 0;
+    applyCamera();
+    cull();
+    if (t < 1) resetAnim = requestAnimationFrame(step);
+    else resetAnim = null;
+  }
+  resetAnim = requestAnimationFrame(step);
+}
+
+logoBtn.addEventListener('click', () => {
+  if (currentPage === 1) resetCamera();
+  else goToPage(1);
+});
 navAbout.addEventListener('click', e => { e.preventDefault(); goToPage(2); });
 navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3); });
 </script>
