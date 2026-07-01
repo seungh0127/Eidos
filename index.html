@@ -119,20 +119,71 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: clamp(60px, 8vh, 100px) clamp(32px, 5vw, 80px) 120px;
+  padding: clamp(32px, 4vh, 60px) clamp(32px, 5vw, 80px) 120px;
   box-sizing: border-box;
+}
+
+#about-text-container {
+  position: relative;
+  max-width: min(1200px, 88vw);
+  margin-bottom: clamp(36px, 5.5vh, 64px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+#about-badge-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: clamp(10px, 1.5vh, 16px);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 100px;
+}
+
+/* Badge spotlight (glow on dark bg) */
+.about-spotlight {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: #0D92FF;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+  left: -9999px;
+  top: -9999px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+/* Blue text overlay — masked by cursor circle */
+#about-text-blue {
+  position: absolute;
+  inset: 0;
+  font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(18px, 2.6vw, 40px);
+  font-weight: 600;
+  line-height: 1.38;
+  letter-spacing: -0.02em;
+  color: #0D92FF;
+  text-align: center;
+  word-break: keep-all;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle 220px at var(--mx, -9999px) var(--my, -9999px), black 15%, transparent 60%);
+  mask-image: radial-gradient(circle 220px at var(--mx, -9999px) var(--my, -9999px), black 15%, transparent 60%);
+  z-index: 5;
 }
 
 #about-text {
   font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: clamp(16px, 2.3vw, 36px);
+  font-size: clamp(18px, 2.6vw, 40px);
   font-weight: 600;
   line-height: 1.38;
   letter-spacing: -0.02em;
   color: #111;
   text-align: center;
-  max-width: min(1200px, 88vw);
-  margin-bottom: clamp(36px, 5.5vh, 64px);
   word-break: keep-all;
 }
 
@@ -215,7 +266,6 @@ body {
   letter-spacing: 0.01em;
   border-radius: 100px;
   text-decoration: none;
-  margin-bottom: clamp(10px, 1.5vh, 16px);
 }
 
 #about-badge:hover { background: #333; }
@@ -451,7 +501,10 @@ body {
 <!-- Page 2: About -->
 <div id="page2" class="page">
   <div id="about-wrap">
-    <p id="about-text"></p>
+    <div id="about-text-container">
+      <p id="about-text"></p>
+      <p id="about-text-blue" aria-hidden="true"></p>
+    </div>
     <div id="about-credits">
       <a class="credit-item" href="https://www.instagram.com/__gigawatt/" target="_blank" rel="noopener">
         <span class="credit-role">Industrial Designer</span>
@@ -473,7 +526,10 @@ body {
         <span class="credit-name">Doyun Seo</span>
       </a>
     </div>
-    <a id="about-badge" href="https://www.newformative.com/" target="_blank" rel="noopener">2026 MEP Exhibition ⟨everyelse⟩</a>
+    <div id="about-badge-wrap">
+      <a id="about-badge" href="https://www.newformative.com/" target="_blank" rel="noopener">2026 MEP Exhibition ⟨everyelse⟩</a>
+      <div class="about-spotlight" id="badge-spotlight" aria-hidden="true"></div>
+    </div>
     <p id="about-copy">© 2026 Samsung Design Membership All Rights Reserved</p>
   </div>
 </div>
@@ -1219,45 +1275,73 @@ function resetCamera() {
 
 // ── About page word-reveal animation ─────────────────────────────────────────
 const ABOUT_FULL = "Eidos is an on-demand robotic service that extends AI responses beyond the screen and into physical action in the real world. Whatever you need, it arrives in the form best suited to the moment, helping turn your intentions into reality. As possibilities once confined to the screen lead to tangible change, AI will become a future living infrastructure that supports every moment of everyday life. Whenever and wherever you need it, call Eidos.";
-const aboutTextEl = document.getElementById('about-text');
+const aboutTextEl     = document.getElementById('about-text');
+const aboutTextBlueEl = document.getElementById('about-text-blue');
 let revealTimers = [];
 
-function startTyping() {
-  // Clear any previous timers
-  revealTimers.forEach(t => clearTimeout(t));
-  revealTimers = [];
-
-  // Pre-render all words so layout is fixed from the start
+function buildWordSpans(el) {
   const words = ABOUT_FULL.split(' ');
-  aboutTextEl.innerHTML = '';
+  el.innerHTML = '';
   const inners = [];
-
   words.forEach((word, i) => {
     const wWrap = document.createElement('span');
     wWrap.className = 'word-wrap';
-
     const wInner = document.createElement('span');
     wInner.className = 'word-inner';
     wInner.textContent = word;
     wWrap.appendChild(wInner);
     inners.push(wInner);
-
-    aboutTextEl.appendChild(wWrap);
-    if (i < words.length - 1) {
-      aboutTextEl.appendChild(document.createTextNode(' ')); // non-breaking space to preserve word spacing
-    }
+    el.appendChild(wWrap);
+    if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
   });
+  return inners;
+}
 
-  // Stagger reveal: each word slides up with delay
-  const stagger = 70; // ms between words
-  inners.forEach((inner, i) => {
+function startTyping() {
+  revealTimers.forEach(t => clearTimeout(t));
+  revealTimers = [];
+
+  const mainInners = buildWordSpans(aboutTextEl);
+  const blueInners = buildWordSpans(aboutTextBlueEl);
+
+  const stagger = 70;
+  mainInners.forEach((inner, i) => {
     const t = setTimeout(() => {
-      inner.style.animationDelay = '0ms';
       inner.classList.add('revealed');
+      blueInners[i].classList.add('revealed');
     }, i * stagger);
     revealTimers.push(t);
   });
 }
+
+// ── About spotlight: text mask reveal ────────────────────────────────────────
+(function() {
+  const textContainer = document.getElementById('about-text-container');
+  const blueLayer     = document.getElementById('about-text-blue');
+
+  textContainer.addEventListener('mousemove', (e) => {
+    const r = textContainer.getBoundingClientRect();
+    blueLayer.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    blueLayer.style.setProperty('--my', (e.clientY - r.top)  + 'px');
+  });
+  textContainer.addEventListener('mouseleave', () => {
+    blueLayer.style.setProperty('--mx', '-9999px');
+    blueLayer.style.setProperty('--my', '-9999px');
+  });
+
+  // Badge: glow spotlight on dark bg
+  const badgeWrap = document.getElementById('about-badge-wrap');
+  const badgeSpot = document.getElementById('badge-spotlight');
+  if (badgeWrap && badgeSpot) {
+    badgeWrap.addEventListener('mouseenter', () => { badgeSpot.style.opacity = '1'; });
+    badgeWrap.addEventListener('mouseleave', () => { badgeSpot.style.opacity = '0'; });
+    badgeWrap.addEventListener('mousemove', (e) => {
+      const r = badgeWrap.getBoundingClientRect();
+      badgeSpot.style.left = (e.clientX - r.left) + 'px';
+      badgeSpot.style.top  = (e.clientY - r.top)  + 'px';
+    });
+  }
+})();
 
 logoBtn.addEventListener('click', () => {
   if (currentPage === 1) resetCamera();
