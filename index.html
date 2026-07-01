@@ -286,7 +286,6 @@ body {
 }
 
 /* ── About page: gradient blur overlays (mobile only) ── */
-.about-blur-top,
 .about-blur-bottom {
   display: none;
 }
@@ -342,7 +341,6 @@ body {
   #about-copy { font-size: 1.2rem; }
 
   /* Gradient overlays */
-  .about-blur-top,
   .about-blur-bottom {
     display: block;
     position: absolute;
@@ -350,12 +348,6 @@ body {
     pointer-events: none;
     z-index: 500;
     background: linear-gradient(180deg, color(display-p3 1 1 1 / 0.00) 0%, color(display-p3 1 1 1) 50%, color(display-p3 1 1 1) 100%);
-  }
-
-  .about-blur-top {
-    top: 0;
-    height: 17.8rem;
-    background: linear-gradient(180deg, color(display-p3 1 1 1) 0%, color(display-p3 1 1 1) 50%, color(display-p3 1 1 1 / 0.00) 100%);
   }
 
   .about-blur-bottom {
@@ -620,7 +612,6 @@ body {
     <p id="about-copy">© 2026 Samsung Design Membership<br>All Rights Reserved</p>
   </div>
   </div><!-- /about-scroll -->
-  <div class="about-blur-top" aria-hidden="true"></div>
   <div class="about-blur-bottom" aria-hidden="true"></div>
 </div>
 
