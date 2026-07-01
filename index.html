@@ -141,7 +141,7 @@ body {
   color: #FFFFFF; /* difference 후 흰 배경에서 #000000, 어두운 배경에서 밝게 표시 */
 }
 @media (max-width: 768px) {
-  .nav-link { font-size: 20px; }
+  .nav-link { font-size: 26px; }
 }
 
 /* ── Page 3: Possibilities ── */
@@ -1035,6 +1035,10 @@ function goToPage(n) {
   if (n === 1) { page1.classList.add('active'); }
   if (n === 2) { page2.classList.add('active'); navAbout.classList.add('active'); }
   if (n === 3) { page3.classList.add('active'); navPossibilities.classList.add('active'); }
+  if (IS_MOBILE) {
+    if (n === 1) { gyroToggleBtn.classList.add('visible'); }
+    else { gyroToggleBtn.classList.remove('visible'); }
+  }
   currentPage = n;
 }
 
