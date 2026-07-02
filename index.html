@@ -395,6 +395,24 @@ body {
   #main-nav { gap: 3px; }
 }
 
+/* ── Module hover label ── */
+#hover-label {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #fff;
+  mix-blend-mode: difference;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  will-change: transform;
+}
+#hover-label.visible { opacity: 1; }
+
 /* ── Page 3: Possibilities ── */
 @media (max-width: 768px) {
   .poss-item {
@@ -693,6 +711,9 @@ body {
     </div>
   </div>
 </div>
+
+<!-- Module hover label (desktop only, single shared element) -->
+<div id="hover-label" aria-hidden="true"></div>
 
 <!-- Logo: always on top, toggles pages -->
 <div id="logo-btn">
@@ -1173,8 +1194,80 @@ function loop(ts) {
 }
 requestAnimationFrame(loop);
 
+// ─── Module name map ──────────────────────────────────────────────────────────
+const MODULE_NAMES = {
+  'H-A-1':'Block Head','H-A-2':'Expression Block','H-A-3':'Split Face Head','H-A-4':'Tablet Face Head','H-A-5':'Ambient Light Head',
+  'H-B-1':'Pebble Head','H-B-2':'Buddy Head','H-B-3':'Sidecar Head','H-B-4':'Blind Work Head','H-B-5':'Desk Head',
+  'H-C-1':'Utility Vision Head','H-C-2':'Binocular Work Head','H-C-3':'Pan-Tilt Sensor Head','H-C-4':'Projection Head','H-C-5':'Rugged Vision Head',
+  'H-D-1':'Rugged Sensor Head','H-D-2':'Thermal Rescue Head','H-D-3':'Aquatic Sealed Head','H-D-4':'Night Guardian Head',
+  'H-E-1':'Periscope Head','H-E-2':'Drone Dock Head',
+  'C-A-1':'Domestic Pillar Core','C-A-2':'Soft Belly Core','C-A-3':'Home Dock Core',
+  'C-B-1':'Slim Service Tower','C-B-2':'Tray Spine Core','C-B-3':'Counter Core',
+  'C-C-1':'Heavy Load Core','C-C-2':'Exo-Frame Core','C-C-3':'Counterbalanced Core',
+  'C-D-1':'Rugged Field Core','C-D-2':'Rescue Capsule Core',
+  'C-E-1':'Micro Dock Core','C-E-2':'Flat Sled Core','C-E-3':'Pivot Dock Core',
+  'S-A-1':'Soft Assist Shoulder Base','S-A-2':'Dual Soft Shoulder','S-A-3':'Dual Soft Shoulder',
+  'S-B-1':'High-Torque Shoulder','S-B-2':'Piston-Assist Shoulder',
+  'S-C-1':'Compact Precision Shoulder','S-C-2':'Camera Rig Shoulder','S-C-3':'Tool Rail Shoulder',
+  'S-D-1':'Wide Utility Shoulder','S-D-2':'Multi-Arm Bridge','S-D-3':'Tray Support Shoulder',
+  'S-E-1':'Rear Assist Shoulder','S-E-2':'Service Hitch Shoulder','S-E-3':'Studio Boom Shoulder',
+  'U-A-1':'Short Service Link','U-A-2':'Balanced Link Arm',
+  'U-B-1':'Linear Power Arm','U-B-2':'Dual Piston Arm','U-B-3':'Load Lock Arm',
+  'U-C-1':'Passive Compliant Arm','U-C-2':'Force-Limited Arm',
+  'U-D-1':'Compact Precision Arm','U-D-2':'Stabilized Precision Arm',
+  'U-E-1':'Tool Rail Arm','U-E-2':'Boom Link Arm','U-E-3':'Hose Cable Arm',
+  'F-A-1':'Basic Connector Port','F-A-2':'Basic Rotate Wrist','F-A-3':'Basic Rotate Wrist',
+  'F-B-1':'Multi-Axis Precision Wrist','F-B-2':'Multi-Axis Precision Wrist',
+  'F-C-1':'Quick Dock Wrist','F-C-2':'Powered Tool Wrist','F-C-3':'Tool Turret Wrist',
+  'F-D-1':'Mechanical Lock Wrist','F-D-2':'Clamp Support Wrist','F-D-3':'Shock Load Wrist',
+  'F-E-1':'Force-Sensing Wrist','F-E-2':'Breakaway Safety Wrist',
+  'E-A-1':'Adaptive Soft Gripper','E-A-2':'Adaptive Soft Gripper','E-A-3':'Adaptive Soft Gripper',
+  'E-B-1':'Parallel Utility Gripper','E-B-2':'Heavy Clamp Gripper',
+  'E-C-1':'Precision Finger Gripper','E-C-2':'Stabilized Detail Holder',
+  'E-D-1':'Task End-Effector Base','E-D-2':'Cleaning Brush / Wiper Tool','E-D-3':'Spray / Nozzle Tool','E-D-4':'Powered Driver Tool','E-D-5':'Rescue Cutter / Pull Tool','E-D-6':'Tray Support End',
+  'L-A-1':'Standard Biped Legs','L-A-2':'Stabilized Work Biped','L-A-3':'Compact Biped Legs',
+  'L-B-1':'Foot-Wheel Biped','L-B-2':'Roller-Knee Biped','L-B-3':'Compact Quadruped',
+  'L-C-1':'Compact Quadruped','L-C-2':'Compact Quadruped','L-C-3':'Heavy Quadruped Carrier','L-C-4':'Caterpillar Quadruped',
+  'L-D-1':'Wheel Base','L-D-2':'Omni Wheel Base','L-D-3':'Stable Four Wheel Base',
+  'L-E-1':'Compact Track Base','L-E-2':'Articulated Crawler Base',
+  'L-F-1':'Flat Cargo Platform','L-F-2':'Ski / Sled Runner Base','L-F-3':'Tow Trailer Platform',
+  'L-G-1':'Monowheel Speedster',
+  'EX-A-0':'Power Extension Base','EX-A-1':'Utility Cargo Trailer','EX-A-2':'Secure Delivery Trailer',
+  'EX-B-1':'Battery Extension Pack','EX-C-1':'Tool Rack Trailer','EX-D-1':'Stargazer Trailer'
+};
+
 // ─── Desktop: mouse hover ─────────────────────────────────────────────────────
 if (!IS_MOBILE) {
+  const hoverLabel  = document.getElementById('hover-label');
+  let   labelX      = 0, labelY = 0;
+  let   labelRafId  = null;
+  let   labelVisible = false;
+
+  function showLabel(file) {
+    const name = MODULE_NAMES[file];
+    hoverLabel.textContent = name ? `${file}  ${name}` : file;
+    hoverLabel.classList.add('visible');
+    labelVisible = true;
+  }
+
+  function hideLabel() {
+    hoverLabel.classList.remove('visible');
+    labelVisible = false;
+  }
+
+  function updateLabelPos() {
+    labelRafId = null;
+    if (!labelVisible) return;
+    const OFFSET = 16;
+    const lw = hoverLabel.offsetWidth;
+    const lh = hoverLabel.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const x = labelX + OFFSET + lw > vw ? labelX - OFFSET - lw : labelX + OFFSET;
+    const y = labelY + OFFSET + lh > vh ? labelY - OFFSET - lh : labelY + OFFSET;
+    hoverLabel.style.transform = `translate(${x}px,${y}px)`;
+  }
+
   world.addEventListener('mouseover', e => {
     if (isDragging) return;
     const mod = e.target.closest('.module');
@@ -1183,6 +1276,7 @@ if (!IS_MOBILE) {
     mod.style.transform = `scale(${(modBaseScale * 1.22).toFixed(4)})`;
     mod.style.zIndex    = '100';
     playGif(mod);
+    showLabel(mod.dataset.file);
   });
 
   world.addEventListener('mouseout', e => {
@@ -1192,7 +1286,17 @@ if (!IS_MOBILE) {
     applyModBaseScale(mod, modBaseScale);
     mod.style.zIndex = '';
     revertGif(mod);
+    hideLabel();
   });
+
+  window.addEventListener('mousemove', e => {
+    labelX = e.clientX;
+    labelY = e.clientY;
+    if (labelVisible && !labelRafId) {
+      labelRafId = requestAnimationFrame(updateLabelPos);
+    }
+    if (isDragging) hideLabel();
+  }, { passive: true });
 
   // GIF proximity preload (desktop)
   let gifTimer = null;
