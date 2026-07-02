@@ -442,7 +442,7 @@ body {
 }
 
 /* Logo: plus-lighter on Possibilities page */
-#logo-btn.poss-active img {
+#logo-btn.poss-active {
   mix-blend-mode: plus-lighter;
 }
 
@@ -1512,8 +1512,8 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
 // ─── Possibilities Carousel ───────────────────────────────────────────────────
 (function() {
   const IMGS      = 9;
-  const SPEED_PC  = 80;  // px/s
-  const SPEED_MOB = 50;  // px/s
+  const SPEED_PC  = 80;
+  const SPEED_MOB = 50;
 
   const carousel = document.getElementById('poss-carousel');
   const track    = document.getElementById('poss-track');
@@ -1524,9 +1524,10 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
   let speed   = SPEED_PC;
   let offsetX = 0;
   let paused  = false;
+  let animating = false;
   let lastTs  = null;
 
-  let dragging      = false;
+  let dragMoved     = false;
   let dragStartX    = 0;
   let dragOffsetStart = 0;
   let resumeTimer   = null;
@@ -1545,8 +1546,35 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
   updateDimensions();
   window.addEventListener('resize', updateDimensions);
 
+  // Ease-out cubic
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function animateTo(target, duration, onDone) {
+    animating = true;
+    paused    = true;
+    const startOffset = offsetX;
+    const startTime   = performance.now();
+    // Shortest path wrap
+    let diff = ((target - startOffset) % totalW + totalW) % totalW;
+    if (diff > totalW / 2) diff -= totalW;
+    const endOffset = startOffset + diff;
+
+    function step(ts) {
+      const t = Math.min((ts - startTime) / duration, 1);
+      offsetX = startOffset + diff * easeOut(t);
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        offsetX = ((endOffset % totalW) + totalW) % totalW;
+        animating = false;
+        onDone && onDone();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
   function render(ts) {
-    if (!paused && !dragging) {
+    if (!paused && !animating) {
       if (lastTs !== null) {
         offsetX += (ts - lastTs) * speed / 1000;
         if (offsetX >= totalW) offsetX -= totalW;
@@ -1560,37 +1588,74 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
   }
   requestAnimationFrame(render);
 
-  function onDragStart(e) {
-    if (e.button !== undefined && e.button !== 0) return;
-    dragging = true;
-    paused   = true;
+  function scheduleResume() {
     clearTimeout(resumeTimer);
-    dragStartX      = e.touches ? e.touches[0].clientX : e.clientX;
+    resumeTimer = setTimeout(() => { paused = false; }, 1500);
+  }
+
+  // Click: center the tapped item
+  function onItemClick(idx) {
+    // Use index mod IMGS to get canonical position, but find nearest occurrence
+    const center = window.innerWidth / 2 - itemW / 2;
+    // Try both original (idx) and duplicate (idx + IMGS)
+    const pos0 = idx * itemW - center;
+    const pos1 = (idx + IMGS) * itemW - center;
+    // Choose whichever is closer to current offsetX (shortest travel)
+    const d0 = Math.abs(((pos0 - offsetX + totalW) % totalW));
+    const d1 = Math.abs(((pos1 - offsetX + totalW) % totalW));
+    const target = d0 <= d1 ? pos0 : pos1;
+    animateTo(((target % totalW) + totalW) % totalW, 600, scheduleResume);
+  }
+
+  // Pointer handling — distinguish click vs drag
+  let pointerDownX = 0;
+  let pointerHeld  = false;
+
+  function onPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (animating) return;
+    dragMoved       = false;
+    pointerDownX    = e.touches ? e.touches[0].clientX : e.clientX;
+    dragStartX      = pointerDownX;
     dragOffsetStart = offsetX;
+    pointerHeld     = true;
+    paused          = true;
+    clearTimeout(resumeTimer);
     carousel.classList.add('dragging');
     e.preventDefault();
   }
 
-  function onDragMove(e) {
-    if (!dragging) return;
+  function onPointerMove(e) {
+    if (!pointerHeld) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const delta   = dragStartX - clientX;
-    offsetX = ((dragOffsetStart + delta) % totalW + totalW) % totalW;
+    const delta = dragStartX - clientX;
+    if (!dragMoved && Math.abs(clientX - pointerDownX) > 5) dragMoved = true;
+    if (dragMoved) {
+      offsetX = ((dragOffsetStart + delta) % totalW + totalW) % totalW;
+    }
   }
 
-  function onDragEnd() {
-    if (!dragging) return;
-    dragging = false;
+  function onPointerUp(e) {
+    pointerHeld = false;
     carousel.classList.remove('dragging');
-    resumeTimer = setTimeout(() => { paused = false; }, 500);
+    if (!dragMoved) {
+      // It's a click — find which item
+      const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+      const trackX  = clientX + offsetX;
+      const idx     = Math.floor(trackX / itemW) % IMGS;
+      onItemClick(idx);
+    } else {
+      scheduleResume();
+    }
+    dragMoved = false;
   }
 
-  carousel.addEventListener('mousedown',  onDragStart, { passive: false });
-  carousel.addEventListener('touchstart', onDragStart, { passive: false });
-  window.addEventListener('mousemove',  onDragMove);
-  window.addEventListener('touchmove',  onDragMove, { passive: true });
-  window.addEventListener('mouseup',    onDragEnd);
-  window.addEventListener('touchend',   onDragEnd);
+  carousel.addEventListener('mousedown',  onPointerDown, { passive: false });
+  carousel.addEventListener('touchstart', onPointerDown, { passive: false });
+  window.addEventListener('mousemove',  onPointerMove);
+  window.addEventListener('touchmove',  onPointerMove, { passive: true });
+  window.addEventListener('mouseup',    onPointerUp);
+  window.addEventListener('touchend',   onPointerUp);
 })();
 </script>
 </body>
