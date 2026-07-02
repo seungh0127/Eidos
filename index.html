@@ -396,7 +396,50 @@ body {
 }
 
 /* ── Page 3: Possibilities ── */
-#page3 { background: #111111; }
+#page3 {
+  background: linear-gradient(180deg, #111111 0%, #0a1a2c 100%);
+}
+
+#poss-carousel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#poss-carousel.dragging { cursor: grabbing; }
+
+#poss-track {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+}
+
+.poss-item {
+  flex-shrink: 0;
+  width: calc(100vw / 3.2);
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0;
+}
+
+.poss-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* Logo: plus-lighter on Possibilities page */
+#logo-btn.poss-active img {
+  mix-blend-mode: plus-lighter;
+}
 
 /* ── Gyro toggle — safe area 우측 상단 ── */
 #gyro-toggle {
@@ -620,7 +663,31 @@ body {
 </div>
 
 <!-- Page 3: Possibilities -->
-<div id="page3" class="page"></div>
+<div id="page3" class="page">
+  <div id="poss-carousel">
+    <div id="poss-track">
+      <div class="poss-item"><img src="assets/robot-1.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-2.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-3.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-4.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-5.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-6.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-7.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-8.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-9.png" alt=""></div>
+      <!-- duplicate for seamless loop -->
+      <div class="poss-item"><img src="assets/robot-1.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-2.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-3.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-4.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-5.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-6.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-7.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-8.png" alt=""></div>
+      <div class="poss-item"><img src="assets/robot-9.png" alt=""></div>
+    </div>
+  </div>
+</div>
 
 <!-- Logo: always on top, toggles pages -->
 <div id="logo-btn">
@@ -1326,6 +1393,8 @@ function goToPage(n) {
     if (n === 1) { gyroToggleBtn.classList.add('visible'); }
     else { gyroToggleBtn.classList.remove('visible'); }
   }
+  if (n === 3) logoBtn.classList.add('poss-active');
+  else logoBtn.classList.remove('poss-active');
   currentPage = n;
 }
 
@@ -1434,6 +1503,85 @@ logoBtn.addEventListener('click', () => {
 });
 navAbout.addEventListener('click', e => { e.preventDefault(); goToPage(2); });
 navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3); });
+
+// ─── Possibilities Carousel ───────────────────────────────────────────────────
+(function() {
+  const IMGS  = 9;
+  const SPEED = 80; // px/s
+
+  const carousel = document.getElementById('poss-carousel');
+  const track    = document.getElementById('poss-track');
+  if (!carousel || !track) return;
+
+  let itemW   = 0;
+  let totalW  = 0;
+  let offsetX = 0;
+  let paused  = false;
+  let lastTs  = null;
+
+  let dragging      = false;
+  let dragStartX    = 0;
+  let dragOffsetStart = 0;
+  let resumeTimer   = null;
+
+  function updateDimensions() {
+    itemW  = window.innerWidth / 3.2;
+    totalW = itemW * IMGS;
+    // update item widths
+    document.querySelectorAll('.poss-item').forEach(el => {
+      el.style.width = itemW + 'px';
+    });
+  }
+  updateDimensions();
+  window.addEventListener('resize', updateDimensions);
+
+  function render(ts) {
+    if (!paused && !dragging) {
+      if (lastTs !== null) {
+        offsetX += (ts - lastTs) * SPEED / 1000;
+        if (offsetX >= totalW) offsetX -= totalW;
+      }
+      lastTs = ts;
+    } else {
+      lastTs = null;
+    }
+    track.style.transform = `translateX(${-offsetX}px)`;
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  function onDragStart(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    dragging = true;
+    paused   = true;
+    clearTimeout(resumeTimer);
+    dragStartX      = e.touches ? e.touches[0].clientX : e.clientX;
+    dragOffsetStart = offsetX;
+    carousel.classList.add('dragging');
+    e.preventDefault();
+  }
+
+  function onDragMove(e) {
+    if (!dragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const delta   = dragStartX - clientX;
+    offsetX = ((dragOffsetStart + delta) % totalW + totalW) % totalW;
+  }
+
+  function onDragEnd() {
+    if (!dragging) return;
+    dragging = false;
+    carousel.classList.remove('dragging');
+    resumeTimer = setTimeout(() => { paused = false; }, 1500);
+  }
+
+  carousel.addEventListener('mousedown',  onDragStart, { passive: false });
+  carousel.addEventListener('touchstart', onDragStart, { passive: false });
+  window.addEventListener('mousemove',  onDragMove);
+  window.addEventListener('touchmove',  onDragMove, { passive: true });
+  window.addEventListener('mouseup',    onDragEnd);
+  window.addEventListener('touchend',   onDragEnd);
+})();
 </script>
 </body>
 </html>
