@@ -398,7 +398,7 @@ body {
 /* ── Page 3: Possibilities ── */
 @media (max-width: 768px) {
   .poss-item {
-    padding-bottom: 6rem;
+    padding-bottom: max(11rem, calc(7rem + env(safe-area-inset-bottom, 0px)));
   }
 }
 #page3 {
