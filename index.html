@@ -1506,8 +1506,9 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
 
 // ─── Possibilities Carousel ───────────────────────────────────────────────────
 (function() {
-  const IMGS  = 9;
-  const SPEED = 80; // px/s
+  const IMGS      = 9;
+  const SPEED_PC  = 80;  // px/s
+  const SPEED_MOB = 50;  // px/s
 
   const carousel = document.getElementById('poss-carousel');
   const track    = document.getElementById('poss-track');
@@ -1515,6 +1516,7 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
 
   let itemW   = 0;
   let totalW  = 0;
+  let speed   = SPEED_PC;
   let offsetX = 0;
   let paused  = false;
   let lastTs  = null;
@@ -1524,10 +1526,13 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
   let dragOffsetStart = 0;
   let resumeTimer   = null;
 
+  function isMobile() { return window.innerWidth <= 768; }
+
   function updateDimensions() {
-    itemW  = window.innerWidth / 3.2;
+    const divisor = isMobile() ? 1.5 : 3.2;
+    speed  = isMobile() ? SPEED_MOB : SPEED_PC;
+    itemW  = window.innerWidth / divisor;
     totalW = itemW * IMGS;
-    // update item widths
     document.querySelectorAll('.poss-item').forEach(el => {
       el.style.width = itemW + 'px';
     });
@@ -1538,7 +1543,7 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
   function render(ts) {
     if (!paused && !dragging) {
       if (lastTs !== null) {
-        offsetX += (ts - lastTs) * SPEED / 1000;
+        offsetX += (ts - lastTs) * speed / 1000;
         if (offsetX >= totalW) offsetX -= totalW;
       }
       lastTs = ts;
@@ -1572,7 +1577,7 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
     if (!dragging) return;
     dragging = false;
     carousel.classList.remove('dragging');
-    resumeTimer = setTimeout(() => { paused = false; }, 1500);
+    resumeTimer = setTimeout(() => { paused = false; }, 500);
   }
 
   carousel.addEventListener('mousedown',  onDragStart, { passive: false });
