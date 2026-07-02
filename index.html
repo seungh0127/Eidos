@@ -1546,8 +1546,8 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
   updateDimensions();
   window.addEventListener('resize', updateDimensions);
 
-  // Ease-out cubic
-  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+  // Ease-in-out cubic (gentle)
+  function easeOut(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
 
   function animateTo(target, duration, onDone) {
     animating = true;
@@ -1590,7 +1590,7 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
 
   function scheduleResume() {
     clearTimeout(resumeTimer);
-    resumeTimer = setTimeout(() => { paused = false; }, 1500);
+    resumeTimer = setTimeout(() => { paused = false; }, 1000);
   }
 
   // Click: center the tapped item
@@ -1604,7 +1604,7 @@ navPossibilities.addEventListener('click', e => { e.preventDefault(); goToPage(3
     const d0 = Math.abs(((pos0 - offsetX + totalW) % totalW));
     const d1 = Math.abs(((pos1 - offsetX + totalW) % totalW));
     const target = d0 <= d1 ? pos0 : pos1;
-    animateTo(((target % totalW) + totalW) % totalW, 600, scheduleResume);
+    animateTo(((target % totalW) + totalW) % totalW, 900, scheduleResume);
   }
 
   // Pointer handling — distinguish click vs drag
