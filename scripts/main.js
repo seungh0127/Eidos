@@ -105,6 +105,9 @@ function acquireModule() {
 
 function releaseModule(el) {
   stopModuleVideo(el);
+  // prewarmed(src만 세팅된 상태)도 정리
+  const video = el.querySelector('.module-video');
+  if (video && video.src) { video.removeAttribute('src'); video.load(); }
   el.style.transform = '';
   el.style.zIndex    = '';
   el.dataset.hovered = '';
@@ -232,14 +235,37 @@ function preloadWebP(file) {
 }
 
 // ── WebM video helpers ────────────────────────────────────────────────────────
+function prewarmModuleVideo(mod) {
+  if (mod.classList.contains('video-active')) return;
+  const video = mod.querySelector('.module-video');
+  if (!video || video.src) return;
+  video.src = `assets/${mod.dataset.file}.webm`;
+  video.preload = 'auto';
+}
+
 function playModuleVideo(mod) {
   const file = mod.dataset.file;
   if (!file || mod.classList.contains('video-active')) return;
   const video = mod.querySelector('.module-video');
   if (!video) return;
-  video.src = `assets/${file}.webm`;
-  mod.classList.add('video-active');
-  video.play().catch(() => {});
+  if (!video.src) {
+    video.src = `assets/${file}.webm`;
+    video.preload = 'auto';
+  }
+  const activate = () => {
+    if (mod.dataset.hovered !== '1') return;
+    mod.classList.add('video-active');
+    video.play().catch(() => {});
+  };
+  // readyState >= 3 (HAVE_FUTURE_DATA): 이미 버퍼링 됨
+  if (video.readyState >= 3) {
+    activate();
+  } else {
+    video.addEventListener('canplay', function handler() {
+      video.removeEventListener('canplay', handler);
+      activate();
+    });
+  }
 }
 
 function stopModuleVideo(mod) {
@@ -454,6 +480,23 @@ if (!IS_MOBILE) {
     labelX = e.clientX; labelY = e.clientY;
     if (labelVisible && !labelRafId) labelRafId = requestAnimationFrame(updateLabelPos);
     if (isDragging) hideLabel();
+  }, { passive: true });
+
+  // proximity preload: 커서 근처 모듈 video를 미리 버퍼링
+  let prewarmTimer = null;
+  viewport.addEventListener('mousemove', e => {
+    if (overlayOpen || isDragging) return;
+    clearTimeout(prewarmTimer);
+    prewarmTimer = setTimeout(() => {
+      const wx = e.clientX / scale + camX;
+      const wy = e.clientY / scale + camY;
+      for (const [, el] of active) {
+        const comma = el.style.left.indexOf('p');
+        const ex = parseFloat(el.style.left) + IMG / 2;
+        const ey = parseFloat(el.style.top)  + IMG / 2;
+        if (Math.hypot(wx - ex, wy - ey) < CELL * 1.5) prewarmModuleVideo(el);
+      }
+    }, 60);
   }, { passive: true });
 
 }
