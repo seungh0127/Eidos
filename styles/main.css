@@ -198,7 +198,8 @@
   object-fit: contain;
   margin-top: clamp(-28px, -4vmin, -10px);
   display: block;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: default;
 }
 
 @media (max-width: 768px) {
