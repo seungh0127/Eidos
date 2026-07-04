@@ -227,7 +227,7 @@
   left: 50%;
   transform: translate(-50%, 55%);
   /* 화면이 작아질수록 원이 커짐: 200vw가 1500px 상한을 초과하면 1500px로 고정 */
-  width: clamp(1000px, 200vw, 1500px);
+  width: clamp(1000px, 200vw, 1900px);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: radial-gradient(50% 50% at 50% 50%, #187CFF 0%, rgba(0, 212, 255, 0) 100%);
