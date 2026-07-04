@@ -194,6 +194,52 @@
   pointer-events: none;
 }
 
+/* ── Overlay — mobile ── */
+@media (max-width: 768px) {
+  #mod-overlay {
+    padding-bottom: calc(max(16px, env(safe-area-inset-bottom, 16px)) + 50px);
+  }
+
+  #mod-detail-header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .mod-detail-bar {
+    width: 3px;
+    height: 15px;
+  }
+
+  .mod-detail-code-block {
+    gap: 6px;
+  }
+
+  #mod-detail-compact {
+    font-size: 25px;
+  }
+
+  .mod-detail-meta {
+    gap: 2px;
+  }
+
+  #mod-detail-prdt-line,
+  #mod-detail-name-line {
+    font-size: 8px;
+  }
+
+  #mod-detail-title {
+    font-size: clamp(34px, 8.5vw, 44px);
+    max-width: 80vw;
+    padding: 0 8px;
+  }
+
+  #mod-detail-img {
+    width: clamp(160px, 44vw, 210px);
+    height: clamp(160px, 44vw, 210px);
+    margin-top: -6px;
+  }
+}
+
 /* Logo white + nav hidden when overlay is open */
 #logo-btn img { transition: filter 0.28s ease; }
 body.mod-overlay-open #logo-btn img { filter: brightness(0) invert(1); }
