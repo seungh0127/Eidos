@@ -261,7 +261,7 @@
 
 .mod-detail-bar {
   display: block;
-  width: 3px;
+  width: 4px;
   /* equals meta block's total rendered box height so all three elements appear the same height */
   height: clamp(15px, 1.8vw, 31px);
   background: #187CFF;
