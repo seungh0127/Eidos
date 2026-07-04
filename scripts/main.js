@@ -706,7 +706,7 @@ if (IS_MOBILE) {
       gyroResumeTimer = setTimeout(() => { calibrateGyro(); gyroActive = true; }, 400);
     }
     // Tap detection: short touch, no movement, no long press
-    if (!wasMoved && !wasPressed && !overlayOpen) {
+    if (!wasMoved && !overlayOpen) {
       const ct = e.changedTouches[0];
       const el = document.elementFromPoint(ct.clientX, ct.clientY)?.closest?.('.module');
       if (el) openOverlay(el.dataset.file);

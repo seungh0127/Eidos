@@ -90,3 +90,6 @@ body {
   text-decoration: none;
 }
 #logo-btn img { display: block; width: clamp(210px, 55vw, 270px); height: auto; pointer-events: none; }
+@media (max-width: 768px) {
+  #logo-btn img { width: clamp(245px, 68vw, 310px); }
+}
