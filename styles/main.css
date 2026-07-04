@@ -184,6 +184,15 @@
   pointer-events: none;
 }
 
+/* ── Signus Digital Round font ── */
+@font-face {
+  font-family: 'Signus Digital Round';
+  src: url('../assets/fonts/SignusDigitalRoundNbp-A61D.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── Module Detail Overlay ── */
 #mod-overlay {
   position: fixed;
@@ -214,9 +223,9 @@
 
 #mod-overlay-glow {
   position: absolute;
-  bottom: -35%;
+  bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, 55%);
   width: clamp(320px, 120vw, 1400px);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
@@ -262,12 +271,12 @@
 }
 
 #mod-detail-compact {
-  font-family: 'Roboto Mono', monospace;
-  font-size: clamp(16px, 2.4vw, 32px);
-  font-weight: 700;
+  font-family: 'Signus Digital Round', monospace;
+  font-size: clamp(20px, 3.2vw, 48px);
+  font-weight: normal;
   color: #0095FF;
   color: color(display-p3 0.0525 0.5736 1);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.12em;
   line-height: 1;
 }
 
@@ -296,6 +305,7 @@
   color: color(display-p3 0.0525 0.5736 1);
   text-align: center;
   line-height: 1;
+  letter-spacing: -0.03em;
   margin: 0;
   word-break: normal;
   overflow-wrap: break-word;
@@ -312,11 +322,13 @@
   width: clamp(200px, 44vmin, 500px);
   height: clamp(200px, 44vmin, 500px);
   object-fit: contain;
-  margin-top: clamp(-50px, -7vmin, -18px);
+  margin-top: clamp(-24px, -3vmin, -8px);
   display: block;
   pointer-events: none;
 }
 
-/* Logo white when overlay is open */
+/* Logo white + nav hidden when overlay is open */
 #logo-btn img { transition: filter 0.28s ease; }
 body.mod-overlay-open #logo-btn img { filter: brightness(0) invert(1); }
+body.mod-overlay-open #main-nav { opacity: 0; pointer-events: none; transition: opacity 0.28s ease; }
+#main-nav { transition: opacity 0.28s ease; }
