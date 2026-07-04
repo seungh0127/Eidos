@@ -650,4 +650,7 @@ function resetCamera() {
   resetAnim = requestAnimationFrame(step);
 }
 
-logoBtn.addEventListener('click', resetCamera);
+logoBtn.addEventListener('click', () => {
+  if (overlayOpen) closeOverlay();
+  else resetCamera();
+});
