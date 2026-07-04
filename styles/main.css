@@ -186,10 +186,10 @@
 #mod-detail-img {
   position: relative;
   z-index: 3;
-  width: clamp(260px, 54vmin, 600px);
-  height: clamp(260px, 54vmin, 600px);
+  width: clamp(280px, 62vmin, 700px);
+  height: clamp(280px, 62vmin, 700px);
   object-fit: contain;
-  margin-top: clamp(-24px, -3vmin, -8px);
+  margin-top: clamp(-28px, -4vmin, -10px);
   display: block;
   pointer-events: none;
 }
