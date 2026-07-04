@@ -51,7 +51,7 @@
 @font-face {
   font-family: 'Signus Digital Round';
   src: url('../assets/fonts/SignusDigitalRoundNbp-A61D.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: bold;
   font-style: normal;
   font-display: swap;
 }
