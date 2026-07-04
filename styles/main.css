@@ -237,8 +237,10 @@
     color(display-p3 0 0.831 1 / 0) 100%
   );
   z-index: 1;
-  pointer-events: auto;
-  cursor: default;
+  pointer-events: none; /* 오버레이 닫혀있을 때 이벤트 차단 */
+}
+#mod-overlay.open #mod-overlay-glow {
+  pointer-events: auto; /* 오버레이 열렸을 때만 클릭으로 닫기 허용 */
 }
 
 #mod-overlay-content {
