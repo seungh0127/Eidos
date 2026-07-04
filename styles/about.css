@@ -46,7 +46,7 @@
   position: absolute;
   width: 200px;
   height: 200px;
-  background: #0D92FF;
+  background: #187CFF;
   border-radius: 50%;
   filter: blur(40px);
   pointer-events: none;
@@ -67,7 +67,7 @@
   font-weight: 500;
   line-height: 1.33;
   letter-spacing: -0.02em;
-  color: #0D92FF;
+  color: #187CFF;
   text-align: center;
   word-break: keep-all;
   pointer-events: none;

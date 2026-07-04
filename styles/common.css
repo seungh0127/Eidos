@@ -89,4 +89,4 @@ body {
   display: block;
   text-decoration: none;
 }
-#logo-btn img { display: block; width: clamp(180px, 50vw, 220px); height: auto; pointer-events: none; }
+#logo-btn img { display: block; width: clamp(210px, 55vw, 270px); height: auto; pointer-events: none; }

@@ -63,8 +63,8 @@
   white-space: nowrap;
   border: 0;
   border-radius: 8rem;
-  background: #0095FF;
-  background: color(display-p3 0.0525 0.5736 1);
+  background: #187CFF;
+  background: color(display-p3 0.094 0.486 1);
   color: #fff;
   font-family: 'Roboto Mono', monospace;
   font-size: 1.5rem;
@@ -162,8 +162,8 @@
   gap: 0.8rem;
   border: 0;
   border-radius: 7.6rem;
-  background: #0095FF;
-  background: color(display-p3 0.0525 0.5736 1);
+  background: #187CFF;
+  background: color(display-p3 0.094 0.486 1);
   cursor: pointer;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -264,8 +264,8 @@
   width: 2px;
   /* equals meta block's total rendered box height so all three elements appear the same height */
   height: clamp(21px, 2.5vw, 34px);
-  background: #0095FF;
-  background: color(display-p3 0.0525 0.5736 1);
+  background: #187CFF;
+  background: color(display-p3 0.094 0.486 1);
   flex-shrink: 0;
 }
 
@@ -280,8 +280,8 @@
   /* Signus Digital Round visible glyphs = 54% of font-size; scaled so visible height matches meta block */
   font-size: clamp(42px, 5.0vw, 68px);
   font-weight: normal;
-  color: #0095FF;
-  color: color(display-p3 0.0525 0.5736 1);
+  color: #187CFF;
+  color: color(display-p3 0.094 0.486 1);
   letter-spacing: 0;
   line-height: 1;
 }
@@ -297,8 +297,8 @@
   font-family: 'Roboto Mono', monospace;
   font-size: clamp(8px, 0.9vw, 13px);
   font-weight: 400;
-  color: #0095FF;
-  color: color(display-p3 0.0525 0.5736 1);
+  color: #187CFF;
+  color: color(display-p3 0.094 0.486 1);
   letter-spacing: 0.07em;
   line-height: 1.1;
 }
@@ -307,8 +307,8 @@
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(36px, 7vw, 110px);
   font-weight: 700;
-  color: #0095FF;
-  color: color(display-p3 0.0525 0.5736 1);
+  color: #187CFF;
+  color: color(display-p3 0.094 0.486 1);
   text-align: center;
   line-height: 1;
   letter-spacing: -0.03em;
