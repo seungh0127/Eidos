@@ -255,15 +255,14 @@
 #mod-detail-header {
   display: flex;
   align-items: center;
-  gap: clamp(6px, 1vw, 13px);
-  margin-bottom: clamp(6px, 1vw, 14px);
+  gap: 11px;
+  margin-bottom: 11px;
 }
 
 .mod-detail-bar {
   display: block;
   width: 4px;
-  /* equals meta block's total rendered box height so all three elements appear the same height */
-  height: clamp(13px, 1.6vw, 27px);
+  height: 20px;
   background: #187CFF;
   background: color(display-p3 0.094 0.486 1);
   flex-shrink: 0;
@@ -272,13 +271,12 @@
 .mod-detail-code-block {
   display: flex;
   align-items: center;
-  gap: clamp(4px, 0.7vw, 9px);
+  gap: 7px;
 }
 
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
-  /* Signus Digital Round visible glyphs = 54% of font-size; scaled so visible height matches meta block */
-  font-size: clamp(26px, 2.9vw, 43px);
+  font-size: 34px;
   font-weight: bold;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
@@ -295,7 +293,7 @@
 #mod-detail-prdt-line,
 #mod-detail-name-line {
   font-family: 'Roboto Mono', monospace;
-  font-size: clamp(7px, 0.77vw, 11px);
+  font-size: 10px;
   font-weight: 400;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
