@@ -226,14 +226,15 @@
   bottom: 0;
   left: 50%;
   transform: translate(-50%, 55%);
-  width: clamp(1400px, 300vw, 3000px);
+  /* 화면이 작아질수록 원이 커짐: 200vw가 1500px 상한을 초과하면 1500px로 고정 */
+  width: clamp(1000px, 200vw, 1500px);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
-  background: radial-gradient(50% 50% at 50% 50%, #00D8FF 0%, rgba(0, 126, 255, 0) 100%);
+  background: radial-gradient(50% 50% at 50% 50%, #187CFF 0%, rgba(0, 212, 255, 0) 100%);
   background: radial-gradient(
     50% 50% at 50% 50%,
-    color(display-p3 0 0.8314 1) 0%,
-    color(display-p3 0.0941 0.4867 1 / 0) 100%
+    color(display-p3 0.094 0.486 1) 0%,
+    color(display-p3 0 0.831 1 / 0) 100%
   );
   z-index: 1;
   pointer-events: auto;
@@ -275,7 +276,7 @@
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
   /* Signus Digital Round visible glyphs = 54% of font-size; scaled so visible height matches meta block */
-  font-size: clamp(39px, 4.6vw, 62px);
+  font-size: clamp(46px, 5.5vw, 74px);
   font-weight: normal;
   color: #0095FF;
   color: color(display-p3 0.0525 0.5736 1);

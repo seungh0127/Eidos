@@ -389,7 +389,7 @@ function loop(ts) {
     gyroVX += (targetGyroX - gyroVX) * 0.18;
     gyroVY += (targetGyroY - gyroVY) * 0.18;
 
-    if (!REDUCED_MOTION) {
+    if (!REDUCED_MOTION && !overlayOpen) {
       if (IS_MOBILE && gyroEnabled && gyroActive && !pressedModule) {
         const inertiaLen = Math.hypot(velX, velY);
         const gyroW = Math.max(0, 1 - inertiaLen / 6);
@@ -403,7 +403,7 @@ function loop(ts) {
   }
 
   if (!isDragging) {
-    if (Math.abs(velX) > 0.05 || Math.abs(velY) > 0.05) {
+    if (!overlayOpen && (Math.abs(velX) > 0.05 || Math.abs(velY) > 0.05)) {
       camX += velX * dt;
       camY += velY * dt;
       velX *= Math.pow(0.88, dt);
