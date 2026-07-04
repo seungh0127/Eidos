@@ -199,6 +199,10 @@
 
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
+  #mod-detail-img {
+    width: clamp(300px, 80vw, 420px);
+    height: clamp(300px, 80vw, 420px);
+  }
 }
 
 /* Logo white + nav hidden when overlay is open */
