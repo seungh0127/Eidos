@@ -278,7 +278,7 @@
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
   /* Signus Digital Round visible glyphs = 54% of font-size; scaled so visible height matches meta block */
-  font-size: clamp(42px, 5.0vw, 68px);
+  font-size: clamp(36px, 4.2vw, 58px);
   font-weight: normal;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
@@ -305,7 +305,7 @@
 
 #mod-detail-title {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: clamp(32px, 6vw, 96px);
+  font-size: clamp(36px, 7vw, 110px);
   font-weight: 700;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
