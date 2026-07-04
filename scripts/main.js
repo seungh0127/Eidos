@@ -498,7 +498,7 @@ function closeOverlay() {
 }
 
 modOverlay.addEventListener('click', e => {
-  if (e.target === modOverlay || e.target.id === 'mod-overlay-bg') closeOverlay();
+  if (e.target === modOverlay || e.target.id === 'mod-overlay-bg' || e.target.id === 'mod-overlay-glow') closeOverlay();
 });
 document.getElementById('mod-overlay-content').addEventListener('click', e => e.stopPropagation());
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && overlayOpen) closeOverlay(); });

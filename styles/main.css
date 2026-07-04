@@ -226,16 +226,18 @@
   bottom: 0;
   left: 50%;
   transform: translate(-50%, 55%);
-  width: clamp(320px, 120vw, 1400px);
+  width: clamp(800px, 300vw, 6000px);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, #007EFF 0%, #00D8FF 100%);
   background: radial-gradient(
     50% 50% at 50% 50%,
     color(display-p3 0.0941 0.4867 1) 0%,
     color(display-p3 0 0.8314 1 / 0.00) 100%
   );
   z-index: 1;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: default;
 }
 
 #mod-overlay-content {
@@ -257,26 +259,25 @@
 .mod-detail-bar {
   display: block;
   width: 2px;
-  height: clamp(28px, 3.5vw, 48px);
+  height: clamp(16px, 2.4vw, 36px);
   background: #0095FF;
   background: color(display-p3 0.0525 0.5736 1);
   flex-shrink: 0;
-  margin-top: 3px;
 }
 
 .mod-detail-code-block {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: clamp(10px, 2vw, 28px);
 }
 
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
-  font-size: clamp(20px, 3.2vw, 48px);
+  font-size: clamp(16px, 2.4vw, 36px);
   font-weight: normal;
   color: #0095FF;
   color: color(display-p3 0.0525 0.5736 1);
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   line-height: 1;
 }
 
@@ -294,7 +295,7 @@
   color: #0095FF;
   color: color(display-p3 0.0525 0.5736 1);
   letter-spacing: 0.07em;
-  line-height: 1.35;
+  line-height: 1.1;
 }
 
 #mod-detail-title {
