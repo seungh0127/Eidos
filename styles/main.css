@@ -255,7 +255,7 @@
 #mod-detail-header {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 1.2vw, 16px);
+  gap: clamp(10px, 1.5vw, 20px);
   margin-bottom: clamp(10px, 1.8vw, 24px);
 }
 
@@ -263,7 +263,7 @@
   display: block;
   width: 3px;
   /* equals meta block's total rendered box height so all three elements appear the same height */
-  height: clamp(21px, 2.5vw, 34px);
+  height: clamp(18px, 2.1vw, 29px);
   background: #187CFF;
   background: color(display-p3 0.094 0.486 1);
   flex-shrink: 0;
@@ -272,7 +272,7 @@
 .mod-detail-code-block {
   display: flex;
   align-items: center;
-  gap: clamp(7px, 1.2vw, 16px);
+  gap: clamp(10px, 1.5vw, 20px);
 }
 
 #mod-detail-compact {
