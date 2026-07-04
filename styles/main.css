@@ -256,14 +256,14 @@
   display: flex;
   align-items: center;
   gap: clamp(10px, 1.5vw, 20px);
-  margin-bottom: clamp(10px, 1.8vw, 24px);
+  margin-bottom: clamp(6px, 1vw, 14px);
 }
 
 .mod-detail-bar {
   display: block;
   width: 3px;
   /* equals meta block's total rendered box height so all three elements appear the same height */
-  height: clamp(18px, 2.1vw, 29px);
+  height: clamp(18px, 2.1vw, 32px);
   background: #187CFF;
   background: color(display-p3 0.094 0.486 1);
   flex-shrink: 0;
@@ -278,7 +278,7 @@
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
   /* Signus Digital Round visible glyphs = 54% of font-size; scaled so visible height matches meta block */
-  font-size: clamp(33px, 3.8vw, 54px);
+  font-size: clamp(30px, 3.4vw, 50px);
   font-weight: bold;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
