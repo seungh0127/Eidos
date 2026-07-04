@@ -428,8 +428,8 @@ window.addEventListener('keydown', e => { if (e.key === 'Escape' && overlayOpen)
 
 // ── Overlay video: pause on hover (PC) / press-and-hold (mobile) ──────────────
 if (!IS_MOBILE) {
-  modDetailVideo.addEventListener('mouseenter', () => { if (overlayOpen) modDetailVideo.pause(); });
-  modDetailVideo.addEventListener('mouseleave', () => { if (overlayOpen) modDetailVideo.play().catch(() => {}); });
+  modDetailVideo.addEventListener('mousedown', () => { if (overlayOpen) modDetailVideo.pause(); });
+  window.addEventListener('mouseup', () => { if (overlayOpen && modDetailVideo.paused) modDetailVideo.play().catch(() => {}); });
 } else {
   modDetailVideo.addEventListener('touchstart', () => { if (overlayOpen) modDetailVideo.pause(); }, { passive: true });
   modDetailVideo.addEventListener('touchend',   () => { if (overlayOpen) modDetailVideo.play().catch(() => {}); }, { passive: true });
