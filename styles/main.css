@@ -143,8 +143,8 @@
   font-weight: normal;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
-  -webkit-text-stroke: 0.7px #187CFF;
-  -webkit-text-stroke: 0.7px color(display-p3 0.094 0.486 1);
+  -webkit-text-stroke: 0.8px #187CFF;
+  -webkit-text-stroke: 0.8px color(display-p3 0.094 0.486 1);
   letter-spacing: 0;
   line-height: 1;
 }
@@ -194,6 +194,10 @@
   margin-top: clamp(-28px, -4vmin, -10px);
   display: block;
   pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .mod-detail-bar { height: 19px; }
 }
 
 /* Logo white + nav hidden when overlay is open */
