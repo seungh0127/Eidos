@@ -305,7 +305,7 @@
 
 #mod-detail-title {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: clamp(36px, 7vw, 110px);
+  font-size: clamp(48px, 7vw, 110px);
   font-weight: 700;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
@@ -325,8 +325,8 @@
 #mod-detail-img {
   position: relative;
   z-index: 3;
-  width: clamp(200px, 44vmin, 500px);
-  height: clamp(200px, 44vmin, 500px);
+  width: clamp(260px, 54vmin, 600px);
+  height: clamp(260px, 54vmin, 600px);
   object-fit: contain;
   margin-top: clamp(-24px, -3vmin, -8px);
   display: block;
