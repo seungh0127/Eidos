@@ -263,7 +263,7 @@
   display: block;
   width: 4px;
   /* equals meta block's total rendered box height so all three elements appear the same height */
-  height: clamp(15px, 1.8vw, 31px);
+  height: clamp(13px, 1.6vw, 27px);
   background: #187CFF;
   background: color(display-p3 0.094 0.486 1);
   flex-shrink: 0;
