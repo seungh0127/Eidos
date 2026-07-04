@@ -51,7 +51,7 @@
 @font-face {
   font-family: 'Signus Digital Round';
   src: url('../assets/fonts/SignusDigitalRoundNbp-A61D.ttf') format('truetype');
-  font-weight: bold;
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
@@ -140,9 +140,11 @@
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
   font-size: 34px;
-  font-weight: bold;
+  font-weight: normal;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
+  -webkit-text-stroke: 0.5px #187CFF;
+  -webkit-text-stroke: 0.5px color(display-p3 0.094 0.486 1);
   letter-spacing: 0;
   line-height: 1;
 }
