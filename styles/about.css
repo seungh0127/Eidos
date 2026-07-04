@@ -195,7 +195,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 17.8rem 3.2rem 22.6rem;
+    padding: 15.0rem 3.2rem 18.0rem;
     min-height: 100%;
     box-sizing: border-box;
   }
@@ -234,6 +234,6 @@
     z-index: 500;
     background: linear-gradient(180deg, color(display-p3 1 1 1 / 0.00) 0%, color(display-p3 1 1 1) 60%, color(display-p3 1 1 1) 100%);
     bottom: 0;
-    height: 22.6rem;
+    height: 18.0rem;
   }
 }

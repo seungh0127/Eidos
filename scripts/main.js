@@ -71,9 +71,6 @@ function moduleAt(c, r) {
 // ── DOM ───────────────────────────────────────────────────────────────────────
 const world           = document.getElementById('world');
 const viewport        = document.getElementById('viewport');
-const gyroOverlay     = document.getElementById('gyro-overlay');
-const gyroToggleBtn   = document.getElementById('gyro-toggle');
-const enableMotionBtn = document.getElementById('enable-motion-btn');
 const logoBtn         = document.getElementById('logo-btn');
 const modOverlay         = document.getElementById('mod-overlay');
 const modDetailCompact   = document.getElementById('mod-detail-compact');
@@ -259,98 +256,11 @@ function revertGif(mod) {
   img.dataset.mode = '';
 }
 
-// ── Gyroscope ─────────────────────────────────────────────────────────────────
-let gyroGranted = false, gyroEnabled = false, gyroActive = false;
-let gyroCalib = true, gyroBaseBeta = 0, gyroBaseGamma = 0;
-let targetGyroX = 0, targetGyroY = 0, gyroVX = 0, gyroVY = 0;
-let gyroResumeTimer = null;
-
-function calibrateGyro() {
-  gyroCalib = true; gyroBaseBeta = 0; gyroBaseGamma = 0;
-  targetGyroX = 0; targetGyroY = 0; gyroVX = 0; gyroVY = 0;
-}
-
-function onDeviceOrientation(e) {
-  if (!gyroEnabled) return;
-  if (gyroCalib) {
-    gyroBaseBeta  = e.beta  ?? 0;
-    gyroBaseGamma = e.gamma ?? 0;
-    gyroCalib = false;
-    return;
-  }
-  const db = (e.beta  ?? 0) - gyroBaseBeta;
-  const dg = (e.gamma ?? 0) - gyroBaseGamma;
-  const angle = screen.orientation?.angle ?? 0;
-  let tiltX, tiltY;
-  if      (angle === 0  ) { tiltX =  dg; tiltY =  db; }
-  else if (angle === 90 ) { tiltX = -db; tiltY =  dg; }
-  else if (angle === 180) { tiltX = -dg; tiltY = -db; }
-  else                    { tiltX =  db; tiltY = -dg; }
-  const DZ = 3, MX = 20;
-  const norm = v => {
-    if (Math.abs(v) < DZ) return 0;
-    return Math.max(-1, Math.min(1, (v - Math.sign(v) * DZ) / (MX - DZ)));
-  };
-  targetGyroX = norm(tiltX) * DRIFT * 5;
-  targetGyroY = norm(tiltY) * DRIFT * 5;
-}
-
-function attachOrientationChange() {
-  const handler = () => calibrateGyro();
-  if (screen.orientation?.addEventListener) screen.orientation.addEventListener('change', handler);
-  else window.addEventListener('orientationchange', handler);
-}
-
-function enableGyro() {
-  gyroGranted = true; gyroEnabled = true; gyroActive = true;
-  calibrateGyro();
-  window.addEventListener('deviceorientation', onDeviceOrientation);
-  attachOrientationChange();
-}
-
 function setThemeColor(color) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', color);
 }
 
-// ── Gyro popup (mobile only) ──────────────────────────────────────────────────
-if (IS_MOBILE) {
-  gyroOverlay.classList.add('visible');
-  gyroToggleBtn.classList.add('visible');
-
-  enableMotionBtn.addEventListener('click', async () => {
-    try {
-      if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-        const perm = await DeviceOrientationEvent.requestPermission();
-        if (perm === 'granted') enableGyro();
-        else { gyroToggleBtn.classList.add('off'); gyroToggleBtn.textContent = 'OFF'; }
-      } else if ('DeviceOrientationEvent' in window) {
-        enableGyro();
-      } else {
-        gyroToggleBtn.classList.add('off'); gyroToggleBtn.textContent = 'OFF';
-      }
-    } catch {
-      gyroToggleBtn.classList.add('off'); gyroToggleBtn.textContent = 'OFF';
-    }
-    gyroOverlay.style.opacity = '0';
-    setTimeout(() => { gyroOverlay.classList.remove('visible'); gyroOverlay.style.opacity = ''; }, 400);
-  });
-
-  gyroToggleBtn.addEventListener('click', () => {
-    if (!gyroGranted) return;
-    gyroEnabled = !gyroEnabled;
-    gyroActive  = gyroEnabled;
-    if (gyroEnabled) {
-      calibrateGyro();
-      gyroToggleBtn.textContent = 'ON';
-      gyroToggleBtn.classList.remove('off');
-    } else {
-      targetGyroX = 0; targetGyroY = 0;
-      gyroToggleBtn.textContent = 'OFF';
-      gyroToggleBtn.classList.add('off');
-    }
-  });
-}
 
 // ── Drag / inertia state ──────────────────────────────────────────────────────
 let isDragging = false;
@@ -386,19 +296,9 @@ function loop(ts) {
   lastTS = ts;
 
   if (!isDragging) {
-    gyroVX += (targetGyroX - gyroVX) * 0.18;
-    gyroVY += (targetGyroY - gyroVY) * 0.18;
-
-    if (!REDUCED_MOTION && !overlayOpen) {
-      if (IS_MOBILE && gyroEnabled && gyroActive && !pressedModule) {
-        const inertiaLen = Math.hypot(velX, velY);
-        const gyroW = Math.max(0, 1 - inertiaLen / 6);
-        camX += gyroVX * dt / scale * gyroW;
-        camY += gyroVY * dt / scale * gyroW;
-      } else if (!IS_MOBILE || !pressedModule) {
-        camX += DRIFT_DX * dt / scale;
-        camY += DRIFT_DY * dt / scale;
-      }
+    if (!REDUCED_MOTION && !overlayOpen && !pressedModule) {
+      camX += DRIFT_DX * dt / scale;
+      camY += DRIFT_DY * dt / scale;
     }
   }
 
@@ -646,8 +546,6 @@ if (IS_MOBILE) {
     touch1 = { x: t.clientX, y: t.clientY, camX, camY };
     touchMoved = false; isDragging = false; velX = 0; velY = 0;
     prevTX = t.clientX; prevTY = t.clientY; prevTT = performance.now();
-    clearTimeout(gyroResumeTimer);
-    gyroActive = false;
     clearTimeout(pressTimer);
     const tx = t.clientX, ty = t.clientY;
     pressTimer = setTimeout(() => {
@@ -693,18 +591,13 @@ if (IS_MOBILE) {
 
   viewport.addEventListener('touchend', e => {
     if (e.touches.length > 0) return;
-    const wasMoved  = touchMoved;
-    const wasPressed = pressedModule !== null;
+    const wasMoved = touchMoved;
     clearTimeout(pressTimer);
     deactivateModulePress();
     isDragging = false; touch1 = null; pinchState = null;
     const cap = 25;
     velX = Math.max(-cap, Math.min(cap, velX));
     velY = Math.max(-cap, Math.min(cap, velY));
-    if (gyroEnabled) {
-      clearTimeout(gyroResumeTimer);
-      gyroResumeTimer = setTimeout(() => { calibrateGyro(); gyroActive = true; }, 400);
-    }
     // Tap detection: short touch, no movement, no long press
     if (!wasMoved && !overlayOpen) {
       const ct = e.changedTouches[0];
