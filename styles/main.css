@@ -143,8 +143,8 @@
   font-weight: normal;
   color: #187CFF;
   color: color(display-p3 0.094 0.486 1);
-  -webkit-text-stroke: 0.5px #187CFF;
-  -webkit-text-stroke: 0.5px color(display-p3 0.094 0.486 1);
+  -webkit-text-stroke: 0.7px #187CFF;
+  -webkit-text-stroke: 0.7px color(display-p3 0.094 0.486 1);
   letter-spacing: 0;
   line-height: 1;
 }
