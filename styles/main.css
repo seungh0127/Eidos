@@ -198,7 +198,7 @@
 }
 
 @media (max-width: 768px) {
-  .mod-detail-bar { width: 3px; }
+  .mod-detail-bar { width: 3px; height: 21px; }
 }
 
 /* Logo white + nav hidden when overlay is open */
