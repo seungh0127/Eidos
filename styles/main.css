@@ -276,7 +276,7 @@
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
   /* Signus Digital Round visible glyphs = 54% of font-size; scaled so visible height matches meta block */
-  font-size: clamp(46px, 5.5vw, 74px);
+  font-size: clamp(42px, 5.0vw, 68px);
   font-weight: normal;
   color: #0095FF;
   color: color(display-p3 0.0525 0.5736 1);
