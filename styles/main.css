@@ -255,7 +255,7 @@
 #mod-detail-header {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 1.3vw, 17px);
+  gap: clamp(6px, 1vw, 13px);
   margin-bottom: clamp(6px, 1vw, 14px);
 }
 
@@ -272,7 +272,7 @@
 .mod-detail-code-block {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 1.3vw, 17px);
+  gap: clamp(6px, 1vw, 13px);
 }
 
 #mod-detail-compact {
