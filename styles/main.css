@@ -261,7 +261,7 @@
 
 .mod-detail-bar {
   display: block;
-  width: 2px;
+  width: 3px;
   /* equals meta block's total rendered box height so all three elements appear the same height */
   height: clamp(21px, 2.5vw, 34px);
   background: #187CFF;
@@ -272,7 +272,7 @@
 .mod-detail-code-block {
   display: flex;
   align-items: center;
-  gap: clamp(10px, 2vw, 28px);
+  gap: clamp(7px, 1.2vw, 16px);
 }
 
 #mod-detail-compact {
