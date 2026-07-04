@@ -20,13 +20,17 @@
   transform-origin: center center;
   transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-.module img {
+.module-thumb,
+.module-video {
   display: block;
   width: var(--mod-img, 200px);
   height: var(--mod-img, 200px);
   object-fit: contain;
   pointer-events: none;
 }
+.module-video { display: none; }
+.module.video-active .module-thumb { display: none; }
+.module.video-active .module-video { display: block; }
 
 /* ── Module hover label ── */
 #hover-label {
@@ -186,7 +190,7 @@
   box-sizing: border-box;
 }
 
-#mod-detail-img {
+#mod-detail-video {
   position: relative;
   z-index: 3;
   width: clamp(280px, 62vmin, 700px);
@@ -199,7 +203,7 @@
 
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
-  #mod-detail-img {
+  #mod-detail-video {
     width: clamp(300px, 80vw, 420px);
     height: clamp(300px, 80vw, 420px);
   }

@@ -77,7 +77,7 @@ const modDetailCompact   = document.getElementById('mod-detail-compact');
 const modDetailPrdtLine  = document.getElementById('mod-detail-prdt-line');
 const modDetailNameLine  = document.getElementById('mod-detail-name-line');
 const modDetailTitle     = document.getElementById('mod-detail-title');
-const modDetailImg       = document.getElementById('mod-detail-img');
+const modDetailVideo     = document.getElementById('mod-detail-video');
 
 // ── Overlay state ─────────────────────────────────────────────────────────────
 let overlayOpen = false;
@@ -89,17 +89,22 @@ function acquireModule() {
   return modulePool.pop() || (() => {
     const d = document.createElement('div');
     d.className = 'module';
-    d.appendChild(document.createElement('img'));
+    const thumb = document.createElement('img');
+    thumb.className = 'module-thumb';
+    const video = document.createElement('video');
+    video.className = 'module-video';
+    video.muted = true;
+    video.loop  = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('preload', 'none');
+    d.appendChild(thumb);
+    d.appendChild(video);
     return d;
   })();
 }
 
 function releaseModule(el) {
-  const img = el.querySelector('img');
-  if (img && img.dataset.mode === 'gif') {
-    img.src = `assets/thumbs/${el.dataset.file}.webp`;
-    img.dataset.mode = '';
-  }
+  stopModuleVideo(el);
   el.style.transform = '';
   el.style.zIndex    = '';
   el.dataset.hovered = '';
@@ -117,10 +122,9 @@ function addModule(c, r) {
   el.dataset.file = file;
   el.style.left   = (c * CELL) + 'px';
   el.style.top    = (r * CELL) + 'px';
-  const img = el.querySelector('img');
-  img.src          = `assets/thumbs/${file}.webp`;
-  img.alt          = file;
-  img.dataset.mode = '';
+  const thumb = el.querySelector('.module-thumb');
+  thumb.src = `assets/thumbs/${file}.webp`;
+  thumb.alt = file;
   applyModBaseScale(el, modBaseScale);
   world.appendChild(el);
   active.set(key, el);
@@ -227,33 +231,22 @@ function preloadWebP(file) {
   new Image().src = `assets/thumbs/${file}.webp`;
 }
 
-// ── GIF cache ─────────────────────────────────────────────────────────────────
-const gifCache      = new Map();
-const MAX_GIF_CACHE = 16;
-
-function preloadGif(file) {
-  if (gifCache.has(file)) return;
-  if (gifCache.size >= MAX_GIF_CACHE) gifCache.delete(gifCache.keys().next().value);
-  const img = new Image();
-  img.src = `assets/${file}.gif`;
-  gifCache.set(file, img);
-}
-
-function playGif(mod) {
+// ── WebM video helpers ────────────────────────────────────────────────────────
+function playModuleVideo(mod) {
   const file = mod.dataset.file;
-  if (!file) return;
-  const img = mod.querySelector('img');
-  if (!img || img.dataset.mode === 'gif') return;
-  img.src = '';
-  img.src = `assets/${file}.gif`;
-  img.dataset.mode = 'gif';
+  if (!file || mod.classList.contains('video-active')) return;
+  const video = mod.querySelector('.module-video');
+  if (!video) return;
+  video.src = `assets/${file}.webm`;
+  mod.classList.add('video-active');
+  video.play().catch(() => {});
 }
 
-function revertGif(mod) {
-  const img = mod.querySelector('img');
-  if (!img || img.dataset.mode !== 'gif') return;
-  img.src = `assets/thumbs/${mod.dataset.file}.webp`;
-  img.dataset.mode = '';
+function stopModuleVideo(mod) {
+  if (!mod.classList.contains('video-active')) return;
+  const video = mod.querySelector('.module-video');
+  if (video) { video.pause(); video.removeAttribute('src'); video.load(); }
+  mod.classList.remove('video-active');
 }
 
 function setThemeColor(color) {
@@ -276,7 +269,7 @@ function activateModulePress(el) {
   el.dataset.hovered = '1';
   el.style.zIndex = '100';
   el.style.transform = `scale(${(modBaseScale * 1.175).toFixed(4)})`;
-  playGif(el);
+  playModuleVideo(el);
 }
 
 function deactivateModulePress() {
@@ -284,7 +277,7 @@ function deactivateModulePress() {
   pressedModule.dataset.hovered = '';
   pressedModule.style.zIndex = '';
   applyModBaseScale(pressedModule, modBaseScale);
-  revertGif(pressedModule);
+  stopModuleVideo(pressedModule);
   pressedModule = null;
 }
 
@@ -371,8 +364,8 @@ function openOverlay(file) {
   modDetailPrdtLine.textContent = `PRDT CODE : ${file}`;
   modDetailNameLine.textContent = name.toUpperCase();
   modDetailTitle.textContent    = name || file;
-  modDetailImg.alt = name || file;
-  modDetailImg.src = `assets/${file}.gif`;
+  modDetailVideo.src = `assets/${file}.webm`;
+  modDetailVideo.play().catch(() => {});
   modOverlay.setAttribute('aria-hidden', 'false');
   modOverlay.classList.add('open');
   document.body.classList.add('mod-overlay-open');
@@ -382,7 +375,7 @@ function openOverlay(file) {
       el.dataset.hovered = '';
       applyModBaseScale(el, modBaseScale);
       el.style.zIndex = '';
-      revertGif(el);
+      stopModuleVideo(el);
     }
   }
   const hl = document.getElementById('hover-label');
@@ -394,13 +387,17 @@ function closeOverlay() {
   modOverlay.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('mod-overlay-open');
   overlayOpen = false;
-  setTimeout(() => { modDetailImg.src = ''; }, 300);
+  setTimeout(() => {
+    modDetailVideo.pause();
+    modDetailVideo.removeAttribute('src');
+    modDetailVideo.load();
+  }, 300);
 }
 
 modOverlay.addEventListener('click', e => {
-  if (!e.target.closest('#mod-detail-img')) closeOverlay();
+  if (!e.target.closest('#mod-detail-video')) closeOverlay();
 });
-modDetailImg.addEventListener('click', e => e.stopPropagation());
+modDetailVideo.addEventListener('click', e => e.stopPropagation());
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && overlayOpen) closeOverlay(); });
 
 // ── Desktop: hover label + GIF ────────────────────────────────────────────────
@@ -438,7 +435,7 @@ if (!IS_MOBILE) {
     mod.dataset.hovered = '1';
     mod.style.transform = `scale(${(modBaseScale * 1.22).toFixed(4)})`;
     mod.style.zIndex    = '100';
-    playGif(mod);
+    playModuleVideo(mod);
     showLabel(mod.dataset.file);
   });
 
@@ -449,7 +446,7 @@ if (!IS_MOBILE) {
     mod.dataset.hovered = '';
     applyModBaseScale(mod, modBaseScale);
     mod.style.zIndex = '';
-    revertGif(mod);
+    stopModuleVideo(mod);
     hideLabel();
   });
 
@@ -459,22 +456,6 @@ if (!IS_MOBILE) {
     if (isDragging) hideLabel();
   }, { passive: true });
 
-  let gifTimer = null;
-  viewport.addEventListener('mousemove', e => {
-    clearTimeout(gifTimer);
-    gifTimer = setTimeout(() => {
-      const wx = e.clientX / scale + camX;
-      const wy = e.clientY / scale + camY;
-      const r  = CELL * 1.5;
-      const c0 = Math.floor((wx - r) / CELL), c1 = Math.floor((wx + r) / CELL);
-      const r0 = Math.floor((wy - r) / CELL), r1 = Math.floor((wy + r) / CELL);
-      for (let row = r0; row <= r1; row++)
-        for (let col = c0; col <= c1; col++) {
-          const dx = wx - (col * CELL + IMG / 2), dy = wy - (row * CELL + IMG / 2);
-          if (dx * dx + dy * dy < r * r) preloadGif(moduleAt(col, row));
-        }
-    }, 80);
-  });
 }
 
 // ── Desktop: click to open overlay ───────────────────────────────────────────
