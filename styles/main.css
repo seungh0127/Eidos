@@ -129,7 +129,7 @@
   background: #187CFF;
   background: color(display-p3 0.094 0.486 1);
   flex-shrink: 0;
-  transform: translateY(-1px);
+  transform: translateY(-0.5px);
 }
 
 .mod-detail-code-block {
