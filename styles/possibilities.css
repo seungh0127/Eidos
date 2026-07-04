@@ -49,6 +49,6 @@
 
 @media (max-width: 768px) {
   .poss-item {
-    padding-bottom: max(11rem, calc(7rem + env(safe-area-inset-bottom, 0px)));
+    padding-bottom: max(3rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
   }
 }
