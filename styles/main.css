@@ -226,14 +226,14 @@
   bottom: 0;
   left: 50%;
   transform: translate(-50%, 55%);
-  width: clamp(800px, 300vw, 6000px);
+  width: clamp(1400px, 300vw, 3000px);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
-  background: radial-gradient(50% 50% at 50% 50%, #007EFF 0%, #00D8FF 100%);
+  background: radial-gradient(50% 50% at 50% 50%, #00D8FF 0%, rgba(0, 126, 255, 0) 100%);
   background: radial-gradient(
     50% 50% at 50% 50%,
-    color(display-p3 0.0941 0.4867 1) 0%,
-    color(display-p3 0 0.8314 1 / 0.00) 100%
+    color(display-p3 0 0.8314 1) 0%,
+    color(display-p3 0.0941 0.4867 1 / 0) 100%
   );
   z-index: 1;
   pointer-events: auto;
@@ -251,7 +251,7 @@
 
 #mod-detail-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: clamp(8px, 1.2vw, 16px);
   margin-bottom: clamp(10px, 1.8vw, 24px);
 }
@@ -259,7 +259,8 @@
 .mod-detail-bar {
   display: block;
   width: 2px;
-  height: clamp(16px, 2.4vw, 36px);
+  /* equals meta block's total rendered box height so all three elements appear the same height */
+  height: clamp(21px, 2.5vw, 34px);
   background: #0095FF;
   background: color(display-p3 0.0525 0.5736 1);
   flex-shrink: 0;
@@ -273,7 +274,8 @@
 
 #mod-detail-compact {
   font-family: 'Signus Digital Round', monospace;
-  font-size: clamp(16px, 2.4vw, 36px);
+  /* Signus Digital Round visible glyphs = 54% of font-size; scaled so visible height matches meta block */
+  font-size: clamp(39px, 4.6vw, 62px);
   font-weight: normal;
   color: #0095FF;
   color: color(display-p3 0.0525 0.5736 1);
@@ -300,7 +302,7 @@
 
 #mod-detail-title {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: clamp(42px, 8.5vw, 130px);
+  font-size: clamp(36px, 7vw, 110px);
   font-weight: 700;
   color: #0095FF;
   color: color(display-p3 0.0525 0.5736 1);
