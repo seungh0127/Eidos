@@ -75,6 +75,15 @@ const gyroOverlay     = document.getElementById('gyro-overlay');
 const gyroToggleBtn   = document.getElementById('gyro-toggle');
 const enableMotionBtn = document.getElementById('enable-motion-btn');
 const logoBtn         = document.getElementById('logo-btn');
+const modOverlay         = document.getElementById('mod-overlay');
+const modDetailCompact   = document.getElementById('mod-detail-compact');
+const modDetailPrdtLine  = document.getElementById('mod-detail-prdt-line');
+const modDetailNameLine  = document.getElementById('mod-detail-name-line');
+const modDetailTitle     = document.getElementById('mod-detail-title');
+const modDetailImg       = document.getElementById('mod-detail-img');
+
+// ── Overlay state ─────────────────────────────────────────────────────────────
+let overlayOpen = false;
 
 // ── Element pool ──────────────────────────────────────────────────────────────
 const modulePool = [];
@@ -453,6 +462,47 @@ const MODULE_NAMES = {
   'EX-B-1':'Battery Extension Pack','EX-C-1':'Tool Rack Trailer','EX-D-1':'Stargazer Trailer'
 };
 
+// ── Module Detail Overlay ─────────────────────────────────────────────────────
+function compactCode(code) { return code.replaceAll('-', ''); }
+
+function openOverlay(file) {
+  const name = MODULE_NAMES[file] || '';
+  modDetailCompact.textContent  = compactCode(file);
+  modDetailPrdtLine.textContent = `PRDT CODE : ${file}`;
+  modDetailNameLine.textContent = name.toUpperCase();
+  modDetailTitle.textContent    = name || file;
+  modDetailImg.alt = name || file;
+  modDetailImg.src = `assets/${file}.gif`;
+  modOverlay.setAttribute('aria-hidden', 'false');
+  modOverlay.classList.add('open');
+  document.body.classList.add('mod-overlay-open');
+  overlayOpen = true;
+  for (const el of active.values()) {
+    if (el.dataset.hovered === '1') {
+      el.dataset.hovered = '';
+      applyModBaseScale(el, modBaseScale);
+      el.style.zIndex = '';
+      revertGif(el);
+    }
+  }
+  const hl = document.getElementById('hover-label');
+  if (hl) hl.classList.remove('visible');
+}
+
+function closeOverlay() {
+  modOverlay.classList.remove('open');
+  modOverlay.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('mod-overlay-open');
+  overlayOpen = false;
+  setTimeout(() => { modDetailImg.src = ''; }, 300);
+}
+
+modOverlay.addEventListener('click', e => {
+  if (e.target === modOverlay || e.target.id === 'mod-overlay-bg') closeOverlay();
+});
+document.getElementById('mod-overlay-content').addEventListener('click', e => e.stopPropagation());
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && overlayOpen) closeOverlay(); });
+
 // ── Desktop: hover label + GIF ────────────────────────────────────────────────
 if (!IS_MOBILE) {
   const hoverLabel = document.getElementById('hover-label');
@@ -482,7 +532,7 @@ if (!IS_MOBILE) {
   }
 
   world.addEventListener('mouseover', e => {
-    if (isDragging) return;
+    if (overlayOpen || isDragging) return;
     const mod = e.target.closest('.module');
     if (!mod) return;
     mod.dataset.hovered = '1';
@@ -493,6 +543,7 @@ if (!IS_MOBILE) {
   });
 
   world.addEventListener('mouseout', e => {
+    if (overlayOpen) return;
     const mod = e.target.closest('.module');
     if (!mod || mod.contains(e.relatedTarget)) return;
     mod.dataset.hovered = '';
@@ -526,9 +577,22 @@ if (!IS_MOBILE) {
   });
 }
 
+// ── Desktop: click to open overlay ───────────────────────────────────────────
+if (!IS_MOBILE) {
+  let clickDownX = 0, clickDownY = 0;
+  viewport.addEventListener('mousedown', e => { clickDownX = e.clientX; clickDownY = e.clientY; }, true);
+  viewport.addEventListener('click', e => {
+    if (overlayOpen) return;
+    if (Math.hypot(e.clientX - clickDownX, e.clientY - clickDownY) > 6) return;
+    const mod = e.target.closest('.module');
+    if (mod) openOverlay(mod.dataset.file);
+  });
+}
+
 // ── Desktop: drag ─────────────────────────────────────────────────────────────
 if (!IS_MOBILE) {
   viewport.addEventListener('mousedown', e => {
+    if (overlayOpen) return;
     isDragging = true;
     viewport.classList.add('dragging');
     dragStartX = e.clientX; dragStartY = e.clientY;
@@ -563,6 +627,7 @@ if (!IS_MOBILE) {
 // ── Mobile: touch ─────────────────────────────────────────────────────────────
 if (IS_MOBILE) {
   viewport.addEventListener('touchstart', e => {
+    if (overlayOpen) return;
     if (e.touches.length === 2) {
       clearTimeout(pressTimer);
       deactivateModulePress();
@@ -628,6 +693,8 @@ if (IS_MOBILE) {
 
   viewport.addEventListener('touchend', e => {
     if (e.touches.length > 0) return;
+    const wasMoved  = touchMoved;
+    const wasPressed = pressedModule !== null;
     clearTimeout(pressTimer);
     deactivateModulePress();
     isDragging = false; touch1 = null; pinchState = null;
@@ -638,11 +705,18 @@ if (IS_MOBILE) {
       clearTimeout(gyroResumeTimer);
       gyroResumeTimer = setTimeout(() => { calibrateGyro(); gyroActive = true; }, 400);
     }
+    // Tap detection: short touch, no movement, no long press
+    if (!wasMoved && !wasPressed && !overlayOpen) {
+      const ct = e.changedTouches[0];
+      const el = document.elementFromPoint(ct.clientX, ct.clientY)?.closest?.('.module');
+      if (el) openOverlay(el.dataset.file);
+    }
   }, { passive: true });
 }
 
 // ── Wheel zoom ────────────────────────────────────────────────────────────────
 viewport.addEventListener('wheel', e => {
+  if (overlayOpen) return;
   e.preventDefault();
   const mx = e.clientX, my = e.clientY;
   const wx = mx / scale + camX, wy = my / scale + camY;

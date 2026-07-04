@@ -183,3 +183,140 @@
   letter-spacing: -0.102rem;
   pointer-events: none;
 }
+
+/* ── Module Detail Overlay ── */
+#mod-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: calc(max(20px, env(safe-area-inset-bottom, 20px)) + clamp(40px, 7vw, 70px));
+  box-sizing: border-box;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+#mod-overlay.open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+#mod-overlay-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+#mod-overlay-glow {
+  position: absolute;
+  bottom: -35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(320px, 120vw, 1400px);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    color(display-p3 0.0941 0.4867 1) 0%,
+    color(display-p3 0 0.8314 1 / 0.00) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+#mod-overlay-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+#mod-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(8px, 1.2vw, 16px);
+  margin-bottom: clamp(10px, 1.8vw, 24px);
+}
+
+.mod-detail-bar {
+  display: block;
+  width: 2px;
+  height: clamp(28px, 3.5vw, 48px);
+  background: #0095FF;
+  background: color(display-p3 0.0525 0.5736 1);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.mod-detail-code-block {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(10px, 2vw, 28px);
+}
+
+#mod-detail-compact {
+  font-family: 'Roboto Mono', monospace;
+  font-size: clamp(16px, 2.4vw, 32px);
+  font-weight: 700;
+  color: #0095FF;
+  color: color(display-p3 0.0525 0.5736 1);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.mod-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#mod-detail-prdt-line,
+#mod-detail-name-line {
+  font-family: 'Roboto Mono', monospace;
+  font-size: clamp(8px, 0.9vw, 13px);
+  font-weight: 400;
+  color: #0095FF;
+  color: color(display-p3 0.0525 0.5736 1);
+  letter-spacing: 0.07em;
+  line-height: 1.35;
+}
+
+#mod-detail-title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(42px, 8.5vw, 130px);
+  font-weight: 700;
+  color: #0095FF;
+  color: color(display-p3 0.0525 0.5736 1);
+  text-align: center;
+  line-height: 1;
+  margin: 0;
+  word-break: normal;
+  overflow-wrap: break-word;
+  position: relative;
+  z-index: 2;
+  max-width: 96vw;
+  padding: 0 clamp(12px, 3vw, 40px);
+  box-sizing: border-box;
+}
+
+#mod-detail-img {
+  position: relative;
+  z-index: 3;
+  width: clamp(200px, 44vmin, 500px);
+  height: clamp(200px, 44vmin, 500px);
+  object-fit: contain;
+  margin-top: clamp(-50px, -7vmin, -18px);
+  display: block;
+  pointer-events: none;
+}
+
+/* Logo white when overlay is open */
+#logo-btn img { transition: filter 0.28s ease; }
+body.mod-overlay-open #logo-btn img { filter: brightness(0) invert(1); }
