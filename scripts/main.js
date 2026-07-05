@@ -89,25 +89,18 @@ function acquireModule() {
   return modulePool.pop() || (() => {
     const d = document.createElement('div');
     d.className = 'module';
-    const thumb = document.createElement('img');
-    thumb.className = 'module-thumb';
     const video = document.createElement('video');
-    video.className = 'module-video';
     video.muted = true;
     video.loop  = true;
     video.setAttribute('playsinline', '');
-    video.setAttribute('preload', 'none');
-    d.appendChild(thumb);
+    video.setAttribute('preload', 'metadata');
     d.appendChild(video);
     return d;
   })();
 }
 
 function releaseModule(el) {
-  stopModuleVideo(el);
-  // prewarmed(src만 세팅된 상태)도 정리
-  const video = el.querySelector('.module-video');
-  if (video && video.src) { video.removeAttribute('src'); video.load(); }
+  cleanupModuleVideo(el);
   el.style.transform = '';
   el.style.zIndex    = '';
   el.dataset.hovered = '';
@@ -125,9 +118,7 @@ function addModule(c, r) {
   el.dataset.file = file;
   el.style.left   = (c * CELL) + 'px';
   el.style.top    = (r * CELL) + 'px';
-  const thumb = el.querySelector('.module-thumb');
-  thumb.src = `assets/thumbs/${file}.webp`;
-  thumb.alt = file;
+  setupModuleVideo(el, file);
   applyModBaseScale(el, modBaseScale);
   world.appendChild(el);
   active.set(key, el);
@@ -221,58 +212,35 @@ function updateModules() {
   for (let r = minR; r <= maxR; r++)
     for (let c = minC; c <= maxC; c++) addModule(c, r);
 
-  for (let r = rmMinR; r <= rmMaxR; r++)
-    for (let c = rmMinC; c <= rmMaxC; c++)
-      if (!active.has(c + ',' + r)) preloadWebP(moduleAt(c, r));
 }
 
-// ── WebP preload ──────────────────────────────────────────────────────────────
-const webpPreloaded = new Set();
-function preloadWebP(file) {
-  if (webpPreloaded.has(file)) return;
-  webpPreloaded.add(file);
-  new Image().src = `assets/thumbs/${file}.webp`;
-}
-
-// ── WebM video helpers ────────────────────────────────────────────────────────
-function prewarmModuleVideo(mod) {
-  if (mod.classList.contains('video-active')) return;
-  const video = mod.querySelector('.module-video');
-  if (!video || video.src) return;
-  video.src = `assets/${mod.dataset.file}.webm`;
-  video.preload = 'auto';
-}
-
-function playModuleVideo(mod) {
-  const file = mod.dataset.file;
-  if (!file || mod.classList.contains('video-active')) return;
-  const video = mod.querySelector('.module-video');
+// ── Module video helpers ──────────────────────────────────────────────────────
+function setupModuleVideo(el, file) {
+  const video = el.querySelector('video');
   if (!video) return;
-  if (!video.src) {
-    video.src = `assets/${file}.webm`;
-    video.preload = 'auto';
-  }
-  const activate = () => {
-    if (mod.dataset.hovered !== '1') return;
-    mod.classList.add('video-active');
-    video.play().catch(() => {});
-  };
-  // readyState >= 3 (HAVE_FUTURE_DATA): 이미 버퍼링 됨
-  if (video.readyState >= 3) {
-    activate();
-  } else {
-    video.addEventListener('canplay', function handler() {
-      video.removeEventListener('canplay', handler);
-      activate();
-    });
-  }
+  video.src = `assets/${file}.webm`;
+  video.load();
 }
 
-function stopModuleVideo(mod) {
-  if (!mod.classList.contains('video-active')) return;
-  const video = mod.querySelector('.module-video');
-  if (video) { video.pause(); video.removeAttribute('src'); video.load(); }
-  mod.classList.remove('video-active');
+function playModuleVideo(el) {
+  const video = el.querySelector('video');
+  if (!video) return;
+  video.play().catch(() => {});
+}
+
+function pauseModuleVideo(el, reset = false) {
+  const video = el.querySelector('video');
+  if (!video) return;
+  video.pause();
+  if (reset) video.currentTime = 0;
+}
+
+function cleanupModuleVideo(el) {
+  const video = el.querySelector('video');
+  if (!video) return;
+  video.pause();
+  video.removeAttribute('src');
+  video.load();
 }
 
 function setThemeColor(color) {
@@ -303,7 +271,7 @@ function deactivateModulePress() {
   pressedModule.dataset.hovered = '';
   pressedModule.style.zIndex = '';
   applyModBaseScale(pressedModule, modBaseScale);
-  stopModuleVideo(pressedModule);
+  pauseModuleVideo(pressedModule, true);
   pressedModule = null;
 }
 
@@ -401,7 +369,7 @@ function openOverlay(file) {
       el.dataset.hovered = '';
       applyModBaseScale(el, modBaseScale);
       el.style.zIndex = '';
-      stopModuleVideo(el);
+      pauseModuleVideo(el, true);
     }
   }
   const hl = document.getElementById('hover-label');
@@ -481,7 +449,7 @@ if (!IS_MOBILE) {
     mod.dataset.hovered = '';
     applyModBaseScale(mod, modBaseScale);
     mod.style.zIndex = '';
-    stopModuleVideo(mod);
+    pauseModuleVideo(mod, true);
     hideLabel();
   });
 
@@ -489,23 +457,6 @@ if (!IS_MOBILE) {
     labelX = e.clientX; labelY = e.clientY;
     if (labelVisible && !labelRafId) labelRafId = requestAnimationFrame(updateLabelPos);
     if (isDragging) hideLabel();
-  }, { passive: true });
-
-  // proximity preload: 커서 근처 모듈 video를 미리 버퍼링
-  let prewarmTimer = null;
-  viewport.addEventListener('mousemove', e => {
-    if (overlayOpen || isDragging) return;
-    clearTimeout(prewarmTimer);
-    prewarmTimer = setTimeout(() => {
-      const wx = e.clientX / scale + camX;
-      const wy = e.clientY / scale + camY;
-      for (const [, el] of active) {
-        const comma = el.style.left.indexOf('p');
-        const ex = parseFloat(el.style.left) + IMG / 2;
-        const ey = parseFloat(el.style.top)  + IMG / 2;
-        if (Math.hypot(wx - ex, wy - ey) < CELL * 1.5) prewarmModuleVideo(el);
-      }
-    }, 60);
   }, { passive: true });
 
 }

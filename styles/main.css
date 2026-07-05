@@ -20,17 +20,14 @@
   transform-origin: center center;
   transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-.module-thumb,
-.module-video {
+.module video {
   display: block;
   width: var(--mod-img, 200px);
   height: var(--mod-img, 200px);
   object-fit: contain;
   pointer-events: none;
+  background: transparent;
 }
-.module-video { display: none; }
-.module.video-active .module-thumb { display: none; }
-.module.video-active .module-video { display: block; }
 
 /* ── Module hover label ── */
 #hover-label {
@@ -198,8 +195,11 @@
   object-fit: contain;
   margin-top: clamp(-28px, -4vmin, -10px);
   display: block;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: default;
+}
+#mod-overlay.open #mod-detail-video {
+  pointer-events: auto;
 }
 
 @media (max-width: 768px) {
