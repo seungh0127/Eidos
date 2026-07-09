@@ -66,12 +66,6 @@
   position: fixed;
   inset: 0;
   z-index: 600;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding-bottom: calc(max(20px, env(safe-area-inset-bottom, 20px)) + clamp(40px, 7vw, 70px));
-  box-sizing: border-box;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.28s ease;
@@ -112,19 +106,24 @@
 }
 
 #mod-overlay-content {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 100%;
+  justify-content: center;
 }
 
 #mod-detail-header {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top, 20px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 11px;
-  margin-bottom: 11px;
 }
 
 .mod-detail-bar {
@@ -184,9 +183,13 @@
   margin: 0;
   word-break: normal;
   overflow-wrap: break-word;
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  top: clamp(60px, 8vh, 100px);
+  left: 0;
+  right: 0;
+  z-index: 4;
   max-width: 96vw;
+  margin-inline: auto;
   padding: 0 clamp(12px, 3vw, 40px);
   box-sizing: border-box;
 }
@@ -194,10 +197,9 @@
 #mod-detail-video {
   position: relative;
   z-index: 3;
-  width: clamp(340px, 74vmin, 880px);
-  height: clamp(340px, 74vmin, 880px);
+  width: clamp(460px, 82vmin, 1000px);
+  height: clamp(460px, 82vmin, 1000px);
   object-fit: contain;
-  margin-top: clamp(-32px, -5vmin, -12px);
   display: block;
   pointer-events: none;
   cursor: default;
@@ -208,9 +210,12 @@
 
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
+  #mod-detail-title {
+    top: clamp(52px, 7vh, 80px);
+  }
   #mod-detail-video {
-    width: clamp(320px, 88vw, 500px);
-    height: clamp(320px, 88vw, 500px);
+    width: clamp(340px, 90vw, 560px);
+    height: clamp(340px, 90vw, 560px);
   }
 }
 
