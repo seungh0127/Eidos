@@ -116,7 +116,7 @@
 
 #mod-detail-header {
   position: absolute;
-  top: clamp(130px, 20vh, 200px);
+  top: clamp(80px, 12vh, 140px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
