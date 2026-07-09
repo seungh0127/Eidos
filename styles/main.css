@@ -116,7 +116,7 @@
 
 #mod-detail-header {
   position: absolute;
-  top: 60px;
+  top: clamp(130px, 20vh, 200px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
@@ -184,7 +184,7 @@
   word-break: normal;
   overflow-wrap: break-word;
   position: absolute;
-  top: clamp(130px, 20vh, 200px);
+  top: clamp(180px, 28vh, 260px);
   left: 0;
   right: 0;
   z-index: 3;
@@ -211,7 +211,7 @@
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
   #mod-detail-title {
-    top: clamp(130px, 20vh, 200px);
+    top: clamp(180px, 28vh, 260px);
   }
   #mod-detail-video {
     width: clamp(340px, 90vw, 560px);
