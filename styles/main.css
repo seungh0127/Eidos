@@ -184,7 +184,7 @@
   word-break: normal;
   overflow-wrap: break-word;
   position: absolute;
-  top: clamp(180px, 28vh, 260px);
+  top: clamp(122px, calc(12vh + 42px), 182px);
   left: 0;
   right: 0;
   z-index: 3;
@@ -211,7 +211,7 @@
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
   #mod-detail-title {
-    top: clamp(180px, 28vh, 260px);
+    top: clamp(122px, calc(12vh + 42px), 182px);
   }
   #mod-detail-video {
     width: clamp(340px, 90vw, 560px);
