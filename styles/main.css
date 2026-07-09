@@ -194,10 +194,10 @@
 #mod-detail-video {
   position: relative;
   z-index: 3;
-  width: clamp(280px, 62vmin, 700px);
-  height: clamp(280px, 62vmin, 700px);
+  width: clamp(340px, 74vmin, 880px);
+  height: clamp(340px, 74vmin, 880px);
   object-fit: contain;
-  margin-top: clamp(-28px, -4vmin, -10px);
+  margin-top: clamp(-32px, -5vmin, -12px);
   display: block;
   pointer-events: none;
   cursor: default;
@@ -209,8 +209,8 @@
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
   #mod-detail-video {
-    width: clamp(300px, 80vw, 420px);
-    height: clamp(300px, 80vw, 420px);
+    width: clamp(320px, 88vw, 500px);
+    height: clamp(320px, 88vw, 500px);
   }
 }
 

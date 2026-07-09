@@ -370,13 +370,22 @@ const MODULE_NAMES = {
 // ── Module Detail Overlay ─────────────────────────────────────────────────────
 function compactCode(code) { return code.replaceAll('-', ''); }
 
+// Modules with high-quality overlay versions in assets/hq/
+const HQ_MODULES = new Set([
+  'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
+  'H-B-1','H-B-2','H-B-3','H-B-4','H-B-5',
+  'H-C-1','H-C-2','H-C-3','H-C-4','H-C-5',
+  'H-D-1','H-D-2','H-D-3','H-D-4',
+  'H-E-1','H-E-2',
+]);
+
 function openOverlay(file) {
   const name = MODULE_NAMES[file] || '';
   modDetailCompact.textContent  = compactCode(file);
   modDetailPrdtLine.textContent = `PRDT CODE : ${file}`;
   modDetailNameLine.textContent = name.toUpperCase();
   modDetailTitle.textContent    = name || file;
-  modDetailVideo.src = `assets/${file}.webm`;
+  modDetailVideo.src = HQ_MODULES.has(file) ? `assets/hq/${file}.webm` : `assets/${file}.webm`;
   modDetailVideo.play().catch(() => {});
   modOverlay.setAttribute('aria-hidden', 'false');
   modOverlay.classList.add('open');
