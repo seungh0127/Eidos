@@ -1,1 +1,4 @@
 .DS_Store
+
+# Raw qtrle/argb master sources — never commit (multi-GB)
+assets/modules/
