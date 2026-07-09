@@ -2,6 +2,8 @@
 const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
                   window.matchMedia('(pointer: coarse)').matches;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Safari (desktop + iOS) doesn't support WebM alpha — use HEVC .mov instead
+const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 // ── Module list ───────────────────────────────────────────────────────────────
 const MODULES = [
@@ -241,7 +243,7 @@ function setupModuleVideo(el, file) {
   const [dw, dh] = getModDisplaySize(file);
   video.style.width  = dw + 'px';
   video.style.height = dh + 'px';
-  video.src = `assets/${file}.webm`;
+  video.src = videoSrc(file);
   video.load();
 }
 
@@ -389,13 +391,32 @@ const HQ_MODULES = new Set([
   'C-E-1','C-E-2','C-E-3',
 ]);
 
+// Modules with HEVC alpha .mov versions for Safari (H-* and C-* have source files)
+const HEVC_MODULES = new Set([
+  'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
+  'H-B-1','H-B-2','H-B-3','H-B-4','H-B-5',
+  'H-C-1','H-C-2','H-C-3','H-C-4','H-C-5',
+  'H-D-1','H-D-2','H-D-3','H-D-4',
+  'H-E-1','H-E-2',
+  'C-A-1','C-A-2','C-A-3',
+  'C-B-1','C-B-2','C-B-3',
+  'C-C-1','C-C-2','C-C-3',
+  'C-D-1','C-D-2',
+  'C-E-1','C-E-2','C-E-3',
+]);
+
+function videoSrc(file, hq = false) {
+  const ext = (IS_SAFARI && HEVC_MODULES.has(file)) ? 'mov' : 'webm';
+  return hq && HQ_MODULES.has(file) ? `assets/hq/${file}.${ext}` : `assets/${file}.${ext}`;
+}
+
 function openOverlay(file) {
   const name = MODULE_NAMES[file] || '';
   modDetailCompact.textContent  = compactCode(file);
   modDetailPrdtLine.textContent = `PRDT CODE : ${file}`;
   modDetailNameLine.textContent = name.toUpperCase();
   modDetailTitle.textContent    = name || file;
-  modDetailVideo.src = HQ_MODULES.has(file) ? `assets/hq/${file}.webm` : `assets/${file}.webm`;
+  modDetailVideo.src = videoSrc(file, true);
   modDetailVideo.play().catch(() => {});
   modOverlay.setAttribute('aria-hidden', 'false');
   modOverlay.classList.add('open');
