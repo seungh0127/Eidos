@@ -51,6 +51,21 @@ const GAP  = IS_MOBILE ? 100 : 160;
 const CELL = IMG + GAP;
 document.documentElement.style.setProperty('--mod-img', IMG + 'px');
 
+// ── Module natural source dimensions (base reference: 2000 → IMG px) ─────────
+// Only entries that differ from the default 2000×2000 are listed.
+const MODULE_SRC = {
+  'H-C-1': [2500, 2500], 'H-C-2': [2500, 2500],
+  'H-C-3': [2800, 2800],
+  'H-C-4': [2500, 2500], 'H-C-5': [2500, 2500],
+  'H-E-1': [2000, 2500],
+};
+const SRC_BASE = 2000;
+
+function getModDisplaySize(file) {
+  const [sw, sh] = MODULE_SRC[file] || [SRC_BASE, SRC_BASE];
+  return [Math.round(IMG * sw / SRC_BASE), Math.round(IMG * sh / SRC_BASE)];
+}
+
 // ── PRNG ──────────────────────────────────────────────────────────────────────
 function mulberry32(seed) {
   seed = seed >>> 0;
@@ -218,6 +233,9 @@ function updateModules() {
 function setupModuleVideo(el, file) {
   const video = el.querySelector('video');
   if (!video) return;
+  const [dw, dh] = getModDisplaySize(file);
+  video.style.width  = dw + 'px';
+  video.style.height = dh + 'px';
   video.src = `assets/${file}.webm`;
   video.load();
 }

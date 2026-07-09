@@ -22,15 +22,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
   transform-origin: center center;
   transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .module video {
   display: block;
-  max-width: var(--mod-img, 200px);
-  max-height: var(--mod-img, 200px);
-  width: auto;
-  height: auto;
+  flex-shrink: 0;
   pointer-events: none;
   background: transparent;
 }
