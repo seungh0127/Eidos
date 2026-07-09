@@ -184,10 +184,10 @@
   word-break: normal;
   overflow-wrap: break-word;
   position: absolute;
-  top: clamp(160px, 22vh, 240px);
+  top: 102px;
   left: 0;
   right: 0;
-  z-index: 4;
+  z-index: 3;
   max-width: 96vw;
   margin-inline: auto;
   padding: 0 clamp(12px, 3vw, 40px);
@@ -196,7 +196,7 @@
 
 #mod-detail-video {
   position: relative;
-  z-index: 3;
+  z-index: 4;
   width: clamp(460px, 82vmin, 1000px);
   height: clamp(460px, 82vmin, 1000px);
   object-fit: contain;
@@ -211,7 +211,7 @@
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
   #mod-detail-title {
-    top: clamp(120px, 16vh, 180px);
+    top: 102px;
   }
   #mod-detail-video {
     width: clamp(340px, 90vw, 560px);
