@@ -47,6 +47,13 @@ const MODULES = [
   'EX-B-1','EX-C-1','EX-D-1',
 ];
 
+const MODULE_CATEGORIES = ['H', 'C', 'S', 'U', 'F', 'E', 'L', 'EX'];
+const MODULES_BY_CATEGORY = MODULES.reduce((groups, file) => {
+  const category = file.slice(0, file.indexOf('-'));
+  (groups[category] ||= []).push(file);
+  return groups;
+}, {});
+
 // ── Layout constants ──────────────────────────────────────────────────────────
 const IMG  = IS_MOBILE ? 130 : 200;
 const GAP  = IS_MOBILE ? 100 : 160;
@@ -65,6 +72,14 @@ const MODULE_SRC = {
   'C-C-1': [2500, 2500], 'C-C-2': [2500, 2500], 'C-C-3': [3000, 2500],
   'C-D-1': [2500, 2500], 'C-D-2': [3400, 2800],
   'C-E-1': [2500, 2800], 'C-E-2': [2500, 2800], 'C-E-3': [2500, 2800],
+  'S-A-1': [2200, 2200], 'S-A-2': [2200, 2200], 'S-A-3': [2200, 2200],
+  'S-B-2': [2200, 2200],
+  'S-C-2': [2500, 2500], 'S-C-3': [2500, 2000],
+  'S-D-1': [2500, 2500], 'S-D-2': [2500, 2500],
+  'S-E-1': [2500, 2000], 'S-E-2': [2800, 2000], 'S-E-3': [2500, 2000],
+  'U-B-1': [2500, 2000], 'U-B-2': [2800, 2000], 'U-B-3': [2800, 2000],
+  'U-D-2': [2800, 2000],
+  'U-E-1': [2800, 2000], 'U-E-2': [2800, 2000], 'U-E-3': [2800, 2000],
 };
 const SRC_BASE = 2000;
 
@@ -84,10 +99,24 @@ function mulberry32(seed) {
   };
 }
 
+function hashCell(c, r, salt = 0) {
+  let h = Math.imul(c, 73856093) ^ Math.imul(r, 19349663) ^ Math.imul(salt, 83492791);
+  h = Math.imul(h ^ (h >>> 16), 2246822507);
+  h = Math.imul(h ^ (h >>> 13), 3266489909);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+function positiveMod(n, m) {
+  return ((n % m) + m) % m;
+}
+
 function moduleAt(c, r) {
-  const seed = (((c * 73856093) ^ (r * 19349663)) >>> 0) + 1;
-  const rng  = mulberry32(seed);
-  return MODULES[Math.floor(rng() * MODULES.length)];
+  const categoryIndex = positiveMod(c * 3 + r * 2, MODULE_CATEGORIES.length);
+  const category = MODULE_CATEGORIES[categoryIndex];
+  const modules = MODULES_BY_CATEGORY[category] || MODULES;
+  const seed = hashCell(c, r, 1);
+  const rng = mulberry32(seed + 1);
+  return modules[Math.floor(rng() * modules.length)];
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
@@ -103,6 +132,7 @@ const modDetailVideo     = document.getElementById('mod-detail-video');
 
 // ── Overlay state ─────────────────────────────────────────────────────────────
 let overlayOpen = false;
+let overlayRevealRaf = null;
 
 // ── Element pool ──────────────────────────────────────────────────────────────
 const modulePool = [];
@@ -464,9 +494,19 @@ const HQ_MODULES = new Set([
   'C-C-1','C-C-2','C-C-3',
   'C-D-1','C-D-2',
   'C-E-1','C-E-2','C-E-3',
+  'S-A-1','S-A-2','S-A-3',
+  'S-B-1','S-B-2',
+  'S-C-1','S-C-2','S-C-3',
+  'S-D-1','S-D-2',
+  'S-E-1','S-E-2','S-E-3',
+  'U-A-1','U-A-2',
+  'U-B-1','U-B-2','U-B-3',
+  'U-C-1','U-C-2',
+  'U-D-1','U-D-2',
+  'U-E-1','U-E-2','U-E-3',
 ]);
 
-// Modules with HEVC alpha .mov versions for Safari (H-* and C-* have source files)
+// Modules with MP4 hover clips and MOV overlay fallbacks.
 const HEVC_MODULES = new Set([
   'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
   'H-B-1','H-B-2','H-B-3','H-B-4','H-B-5',
@@ -478,6 +518,16 @@ const HEVC_MODULES = new Set([
   'C-C-1','C-C-2','C-C-3',
   'C-D-1','C-D-2',
   'C-E-1','C-E-2','C-E-3',
+  'S-A-1','S-A-2','S-A-3',
+  'S-B-1','S-B-2',
+  'S-C-1','S-C-2','S-C-3',
+  'S-D-1','S-D-2',
+  'S-E-1','S-E-2','S-E-3',
+  'U-A-1','U-A-2',
+  'U-B-1','U-B-2','U-B-3',
+  'U-C-1','U-C-2',
+  'U-D-1','U-D-2',
+  'U-E-1','U-E-2','U-E-3',
 ]);
 
 function getHoverVideoSrc(file) {
@@ -501,18 +551,30 @@ function openOverlay(file) {
   modDetailNameLine.textContent = name.toUpperCase();
   modDetailTitle.textContent    = name || file;
   stopActiveHoverVideo();               // release any main-page hover video first
-  modDetailVideo.src = getDetailVideoSrc(file);
-  modDetailVideo.load();
-  modDetailVideo.play().catch(() => {});
+  if (overlayRevealRaf) cancelAnimationFrame(overlayRevealRaf);
+  modOverlay.classList.remove('content-ready');
   modOverlay.setAttribute('aria-hidden', 'false');
   modOverlay.classList.add('open');
   document.body.classList.add('mod-overlay-open');
   overlayOpen = true;
   const hl = document.getElementById('hover-label');
   if (hl) hl.classList.remove('visible');
+  overlayRevealRaf = requestAnimationFrame(() => {
+    overlayRevealRaf = null;
+    if (!overlayOpen) return;
+    modDetailVideo.src = getDetailVideoSrc(file);
+    modDetailVideo.load();
+    modDetailVideo.play().catch(() => {});
+    modOverlay.classList.add('content-ready');
+  });
 }
 
 function closeOverlay() {
+  if (overlayRevealRaf) {
+    cancelAnimationFrame(overlayRevealRaf);
+    overlayRevealRaf = null;
+  }
+  modOverlay.classList.remove('content-ready');
   modOverlay.classList.remove('open');
   modOverlay.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('mod-overlay-open');

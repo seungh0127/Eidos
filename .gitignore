@@ -2,3 +2,6 @@
 
 # Raw qtrle/argb master sources — never commit (multi-GB)
 assets/modules/
+
+# Local conversion scratch files
+work/
