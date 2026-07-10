@@ -25,7 +25,10 @@
   overflow: visible;
   transform-origin: center center;
   transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
 }
+/* While dragging the canvas, keep the grabbing cursor even over modules */
+#viewport.dragging .module { cursor: grabbing; }
 .module-thumb,
 .module-video {
   display: block;
@@ -226,6 +229,9 @@
   pointer-events: none;   /* interactions handled on #mod-overlay-content */
   cursor: default;
 }
+/* Cursor over the overlay video pause zone (inner 70%) */
+#mod-overlay-content.over-pause-zone { cursor: grab; }
+#mod-overlay-content.grabbing { cursor: grabbing; }
 
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }

@@ -516,6 +516,7 @@ function closeOverlay() {
   modOverlay.classList.remove('open');
   modOverlay.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('mod-overlay-open');
+  modOverlayContent.classList.remove('over-pause-zone', 'grabbing');
   overlayOpen = false;
   setTimeout(() => {
     modDetailVideo.pause();
@@ -558,8 +559,20 @@ window.addEventListener('keydown', e => { if (e.key === 'Escape' && overlayOpen)
 
 // ── Overlay video: pause while pressing the video (PC + mobile) ───────────────
 if (!IS_MOBILE) {
-  modOverlayContent.addEventListener('mousedown', e => { if (overlayOpen && isOverDetailVideo(e)) modDetailVideo.pause(); });
-  window.addEventListener('mouseup', () => { if (overlayOpen && modDetailVideo.paused) modDetailVideo.play().catch(() => {}); });
+  // Cursor: grab over the pause zone, grabbing while pressing it
+  modOverlayContent.addEventListener('mousemove', e => {
+    modOverlayContent.classList.toggle('over-pause-zone', overlayOpen && isOverDetailVideo(e));
+  });
+  modOverlayContent.addEventListener('mousedown', e => {
+    if (overlayOpen && isOverDetailVideo(e)) {
+      modDetailVideo.pause();
+      modOverlayContent.classList.add('grabbing');
+    }
+  });
+  window.addEventListener('mouseup', () => {
+    modOverlayContent.classList.remove('grabbing');
+    if (overlayOpen && modDetailVideo.paused) modDetailVideo.play().catch(() => {});
+  });
 } else {
   modOverlayContent.addEventListener('touchstart', e => { if (overlayOpen && isOverDetailVideo(e)) modDetailVideo.pause(); }, { passive: true });
   modOverlayContent.addEventListener('touchend',   () => { if (overlayOpen && modDetailVideo.paused) modDetailVideo.play().catch(() => {}); }, { passive: true });
