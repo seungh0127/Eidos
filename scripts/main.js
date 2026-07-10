@@ -536,11 +536,18 @@ function eventXY(e) {
   const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
   return t ? [t.clientX, t.clientY] : [null, null];
 }
+// The pause/play (and keep-open) hit area is a smaller centered rectangle —
+// ~70% of the video box — so tapping the outer ring still closes the overlay.
+const DETAIL_HIT_SCALE = 0.7;
 function isOverDetailVideo(e) {
   const [x, y] = eventXY(e);
   if (x == null) return false;
   const r = modDetailVideo.getBoundingClientRect();
-  return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  const cx = r.left + r.width  / 2;
+  const cy = r.top  + r.height / 2;
+  const hw = (r.width  * DETAIL_HIT_SCALE) / 2;
+  const hh = (r.height * DETAIL_HIT_SCALE) / 2;
+  return x >= cx - hw && x <= cx + hw && y >= cy - hh && y <= cy + hh;
 }
 
 // Click the backdrop (anywhere but the module video) to close.
