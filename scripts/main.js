@@ -475,15 +475,12 @@ const HEVC_MODULES = new Set([
   'C-E-1','C-E-2','C-E-3',
 ]);
 
-// Safari hover MOV directory. Switch to 'assets/hover/' once dedicated
-// lightweight hover clips exist there; for now reuse the gallery HEVC in assets/.
-const SAFARI_HOVER_DIR = 'assets/';
-
 function getHoverVideoSrc(file) {
-  // Safari can't play WebM alpha → use HEVC .mov where available.
-  // Placeholder modules (no .mov) fall back to .webm; if it fails to load the
-  // WebP thumb simply stays visible (no error surfaced to the user).
-  if (IS_SAFARI && HEVC_MODULES.has(file)) return `${SAFARI_HOVER_DIR}${file}.mov`;
+  // Main page bg is white, so hover clips need no alpha. Designed (H/C) modules
+  // ship a single H.264 MP4 — hardware-decoded on both Chrome and Safari with no
+  // alpha overhead (keeps Safari light). Placeholder modules keep their WebM
+  // (Chrome plays it; on Safari the WebP thumb simply stays visible).
+  if (HEVC_MODULES.has(file)) return `assets/${file}.mp4`;
   return `assets/${file}.webm`;
 }
 
