@@ -39,6 +39,22 @@
 .module.video-active .module-thumb { display: none; }
 .module.video-active .module-video { display: block; }
 
+/* Discourage casual saving of module sources (right-click / long-press / drag).
+   Note: this only blocks the default browser menus — it cannot fully prevent
+   access via devtools, network tab, or direct URLs. */
+.module,
+.module-thumb,
+.module-video,
+#mod-detail-video,
+#mod-overlay-content img,
+#mod-overlay-content video {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
 /* ── Module hover label ── */
 #hover-label {
   position: fixed;
@@ -207,11 +223,8 @@
   height: clamp(460px, 82vmin, 1000px);
   object-fit: contain;
   display: block;
-  pointer-events: none;
+  pointer-events: none;   /* interactions handled on #mod-overlay-content */
   cursor: default;
-}
-#mod-overlay.open #mod-detail-video {
-  pointer-events: auto;
 }
 
 @media (max-width: 768px) {

@@ -114,12 +114,17 @@ function acquireModule() {
     const img = document.createElement('img');
     img.className = 'module-thumb';
     img.decoding = 'async';
+    img.draggable = false;        // block drag-to-save
     const video = document.createElement('video');
     video.className = 'module-video';
     video.muted = true;
     video.loop  = true;
+    video.playsInline = true;
     video.setAttribute('playsinline', '');
     video.preload = 'none';       // never load video until hover/press
+    video.draggable = false;      // block drag-to-save
+    video.controls = false;
+    video.removeAttribute('controls');
     d.appendChild(img);
     d.appendChild(video);
     return d;
@@ -519,20 +524,52 @@ function closeOverlay() {
   }, 300);
 }
 
+// #mod-detail-video is pointer-events:none (anti-save), so its interactions are
+// handled on the parent #mod-overlay-content via coordinate hit-testing.
+const modOverlayContent = document.getElementById('mod-overlay-content');
+modDetailVideo.draggable = false;
+modDetailVideo.controls  = false;
+modDetailVideo.removeAttribute('controls');
+
+function eventXY(e) {
+  if (typeof e.clientX === 'number') return [e.clientX, e.clientY];
+  const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+  return t ? [t.clientX, t.clientY] : [null, null];
+}
+function isOverDetailVideo(e) {
+  const [x, y] = eventXY(e);
+  if (x == null) return false;
+  const r = modDetailVideo.getBoundingClientRect();
+  return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+}
+
+// Click the backdrop (anywhere but the module video) to close.
 modOverlay.addEventListener('click', e => {
-  if (!e.target.closest('#mod-detail-video')) closeOverlay();
+  if (overlayOpen && !isOverDetailVideo(e)) closeOverlay();
 });
-modDetailVideo.addEventListener('click', e => e.stopPropagation());
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && overlayOpen) closeOverlay(); });
 
-// ── Overlay video: pause on hover (PC) / press-and-hold (mobile) ──────────────
+// ── Overlay video: pause while pressing the video (PC + mobile) ───────────────
 if (!IS_MOBILE) {
-  modDetailVideo.addEventListener('mousedown', () => { if (overlayOpen) modDetailVideo.pause(); });
+  modOverlayContent.addEventListener('mousedown', e => { if (overlayOpen && isOverDetailVideo(e)) modDetailVideo.pause(); });
   window.addEventListener('mouseup', () => { if (overlayOpen && modDetailVideo.paused) modDetailVideo.play().catch(() => {}); });
 } else {
-  modDetailVideo.addEventListener('touchstart', () => { if (overlayOpen) modDetailVideo.pause(); }, { passive: true });
-  modDetailVideo.addEventListener('touchend',   () => { if (overlayOpen) modDetailVideo.play().catch(() => {}); }, { passive: true });
+  modOverlayContent.addEventListener('touchstart', e => { if (overlayOpen && isOverDetailVideo(e)) modDetailVideo.pause(); }, { passive: true });
+  modOverlayContent.addEventListener('touchend',   () => { if (overlayOpen && modDetailVideo.paused) modDetailVideo.play().catch(() => {}); }, { passive: true });
 }
+
+// Block the default right-click / long-press menu on module sources.
+// (Sources sit under pointer-events:none children, so the event target is the
+// .module / #mod-overlay-content container — matched via closest().)
+document.addEventListener('contextmenu', e => {
+  if (
+    e.target.closest('.module') ||
+    e.target.closest('#mod-detail-video') ||
+    e.target.closest('#mod-overlay-content')
+  ) {
+    e.preventDefault();
+  }
+});
 
 // ── Desktop: hover label + GIF ────────────────────────────────────────────────
 if (!IS_MOBILE) {
