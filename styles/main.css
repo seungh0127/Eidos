@@ -26,12 +26,18 @@
   transform-origin: center center;
   transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-.module video {
+.module-thumb,
+.module-video {
   display: block;
   flex-shrink: 0;
   pointer-events: none;
   background: transparent;
+  object-fit: contain;
 }
+/* At rest only the WebP thumb shows; the video is swapped in once it is ready */
+.module-video { display: none; }
+.module.video-active .module-thumb { display: none; }
+.module.video-active .module-video { display: block; }
 
 /* ── Module hover label ── */
 #hover-label {

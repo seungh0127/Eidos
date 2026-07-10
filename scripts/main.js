@@ -111,11 +111,16 @@ function acquireModule() {
   return modulePool.pop() || (() => {
     const d = document.createElement('div');
     d.className = 'module';
+    const img = document.createElement('img');
+    img.className = 'module-thumb';
+    img.decoding = 'async';
     const video = document.createElement('video');
+    video.className = 'module-video';
     video.muted = true;
     video.loop  = true;
     video.setAttribute('playsinline', '');
-    video.setAttribute('preload', 'metadata');
+    video.preload = 'none';       // never load video until hover/press
+    d.appendChild(img);
     d.appendChild(video);
     return d;
   })();
@@ -140,7 +145,7 @@ function addModule(c, r) {
   el.dataset.file = file;
   el.style.left   = (c * CELL) + 'px';
   el.style.top    = (r * CELL) + 'px';
-  setupModuleVideo(el, file);
+  setupModuleMedia(el, file);
   applyModBaseScale(el, modBaseScale);
   world.appendChild(el);
   active.set(key, el);
@@ -236,36 +241,94 @@ function updateModules() {
 
 }
 
-// ── Module video helpers ──────────────────────────────────────────────────────
-function setupModuleVideo(el, file) {
-  const video = el.querySelector('video');
-  if (!video) return;
+// ── Module media helpers ──────────────────────────────────────────────────────
+// Only one module's video is ever loaded/playing at a time. At rest every module
+// shows a lightweight WebP thumb; the video src is attached only on hover/press.
+let activeHoverModule = null;
+let hoverToken = 0;
+
+function setupModuleMedia(el, file) {
   const [dw, dh] = getModDisplaySize(file);
-  video.style.width  = dw + 'px';
-  video.style.height = dh + 'px';
-  video.src = videoSrc(file);
-  video.load();
+  const img   = el.querySelector('.module-thumb');
+  const video = el.querySelector('.module-video');
+  if (img) {
+    img.style.width  = dw + 'px';
+    img.style.height = dh + 'px';
+    img.src = `assets/thumbs/${file}.webp`;
+    img.alt = file;
+  }
+  if (video) {
+    video.style.width  = dw + 'px';
+    video.style.height = dh + 'px';
+    video.preload = 'none';
+    video.removeAttribute('src');   // no video file loaded at creation
+  }
+  el.classList.remove('video-active');
 }
 
 function playModuleVideo(el) {
-  const video = el.querySelector('video');
+  const video = el.querySelector('.module-video');
   if (!video) return;
-  video.play().catch(() => {});
+  const file = el.dataset.file;
+  if (!file) return;
+  const token = ++hoverToken;
+  el._hoverToken = token;
+  const src = getHoverVideoSrc(file);
+  if (!video.src.endsWith(src)) {
+    video.src = src;
+    video.load();
+  }
+  const reveal = () => {
+    if (el._hoverToken !== token) return;   // stale hover — ignore
+    el.classList.add('video-active');       // swap thumb -> video once ready
+  };
+  const start = () => {
+    if (el._hoverToken !== token) return;
+    video.play().then(reveal).catch(() => {}); // load error keeps thumb visible
+  };
+  if (video.readyState >= 2) {
+    start();
+  } else {
+    const onReady = () => { video.removeEventListener('loadeddata', onReady); start(); };
+    video.addEventListener('loadeddata', onReady);
+  }
 }
 
-function pauseModuleVideo(el, reset = false) {
-  const video = el.querySelector('video');
-  if (!video) return;
-  video.pause();
-  if (reset) video.currentTime = 0;
+// Pause + fully release a module's video (drop src so Safari MOV leaves memory)
+function stopHoverVideo(el) {
+  const video = el.querySelector('.module-video');
+  if (video) {
+    video.pause();
+    try { video.currentTime = 0; } catch {}
+    video.removeAttribute('src');
+    video.load();
+  }
+  el.classList.remove('video-active');
 }
 
+// Tear down the currently-active hover/press module and restore its rest state
+function stopActiveHoverVideo() {
+  const el = activeHoverModule;
+  if (!el) return;
+  activeHoverModule = null;
+  el._hoverToken = (el._hoverToken || 0) + 1;  // invalidate any pending reveal
+  stopHoverVideo(el);
+  el.dataset.hovered = '';
+  applyModBaseScale(el, modBaseScale);
+  el.style.zIndex = '';
+}
+
+// Culling cleanup: also invalidate pending reveals and clear active ref
 function cleanupModuleVideo(el) {
-  const video = el.querySelector('video');
-  if (!video) return;
-  video.pause();
-  video.removeAttribute('src');
-  video.load();
+  if (el === activeHoverModule) activeHoverModule = null;
+  el._hoverToken = (el._hoverToken || 0) + 1;
+  const video = el.querySelector('.module-video');
+  if (video) {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+  el.classList.remove('video-active');
 }
 
 function setThemeColor(color) {
@@ -285,6 +348,8 @@ let pressTimer = null, pressedModule = null;
 function activateModulePress(el) {
   if (pressedModule) deactivateModulePress();
   pressedModule = el;
+  if (activeHoverModule && activeHoverModule !== el) stopActiveHoverVideo();
+  activeHoverModule = el;
   el.dataset.hovered = '1';
   el.style.zIndex = '100';
   el.style.transform = `scale(${(modBaseScale * 1.175).toFixed(4)})`;
@@ -293,11 +358,16 @@ function activateModulePress(el) {
 
 function deactivateModulePress() {
   if (!pressedModule) return;
-  pressedModule.dataset.hovered = '';
-  pressedModule.style.zIndex = '';
-  applyModBaseScale(pressedModule, modBaseScale);
-  pauseModuleVideo(pressedModule, true);
+  const el = pressedModule;
   pressedModule = null;
+  if (activeHoverModule === el) {
+    stopActiveHoverVideo();
+  } else {
+    stopHoverVideo(el);
+    el.dataset.hovered = '';
+    el.style.zIndex = '';
+    applyModBaseScale(el, modBaseScale);
+  }
 }
 
 // ── Animation loop ────────────────────────────────────────────────────────────
@@ -405,9 +475,21 @@ const HEVC_MODULES = new Set([
   'C-E-1','C-E-2','C-E-3',
 ]);
 
-function videoSrc(file, hq = false) {
+// Safari hover MOV directory. Switch to 'assets/hover/' once dedicated
+// lightweight hover clips exist there; for now reuse the gallery HEVC in assets/.
+const SAFARI_HOVER_DIR = 'assets/';
+
+function getHoverVideoSrc(file) {
+  // Safari can't play WebM alpha → use HEVC .mov where available.
+  // Placeholder modules (no .mov) fall back to .webm; if it fails to load the
+  // WebP thumb simply stays visible (no error surfaced to the user).
+  if (IS_SAFARI && HEVC_MODULES.has(file)) return `${SAFARI_HOVER_DIR}${file}.mov`;
+  return `assets/${file}.webm`;
+}
+
+function getDetailVideoSrc(file) {
   const ext = (IS_SAFARI && HEVC_MODULES.has(file)) ? 'mov' : 'webm';
-  return hq && HQ_MODULES.has(file) ? `assets/hq/${file}.${ext}` : `assets/${file}.${ext}`;
+  return HQ_MODULES.has(file) ? `assets/hq/${file}.${ext}` : `assets/${file}.${ext}`;
 }
 
 function openOverlay(file) {
@@ -416,20 +498,14 @@ function openOverlay(file) {
   modDetailPrdtLine.textContent = `PRDT CODE : ${file}`;
   modDetailNameLine.textContent = name.toUpperCase();
   modDetailTitle.textContent    = name || file;
-  modDetailVideo.src = videoSrc(file, true);
+  stopActiveHoverVideo();               // release any main-page hover video first
+  modDetailVideo.src = getDetailVideoSrc(file);
+  modDetailVideo.load();
   modDetailVideo.play().catch(() => {});
   modOverlay.setAttribute('aria-hidden', 'false');
   modOverlay.classList.add('open');
   document.body.classList.add('mod-overlay-open');
   overlayOpen = true;
-  for (const el of active.values()) {
-    if (el.dataset.hovered === '1') {
-      el.dataset.hovered = '';
-      applyModBaseScale(el, modBaseScale);
-      el.style.zIndex = '';
-      pauseModuleVideo(el, true);
-    }
-  }
   const hl = document.getElementById('hover-label');
   if (hl) hl.classList.remove('visible');
 }
@@ -493,21 +569,29 @@ if (!IS_MOBILE) {
     if (overlayOpen || isDragging) return;
     const mod = e.target.closest('.module');
     if (!mod) return;
+    // Release the previously-hovered module so only one video is ever loaded
+    if (activeHoverModule && activeHoverModule !== mod) stopActiveHoverVideo();
+    activeHoverModule = mod;
+    // Immediate UI feedback — independent of video loading
     mod.dataset.hovered = '1';
     mod.style.transform = `scale(${(modBaseScale * 1.22).toFixed(4)})`;
     mod.style.zIndex    = '100';
-    playModuleVideo(mod);
     showLabel(mod.dataset.file);
+    playModuleVideo(mod);          // async; thumb stays until video is ready
   });
 
   world.addEventListener('mouseout', e => {
     if (overlayOpen) return;
     const mod = e.target.closest('.module');
     if (!mod || mod.contains(e.relatedTarget)) return;
-    mod.dataset.hovered = '';
-    applyModBaseScale(mod, modBaseScale);
-    mod.style.zIndex = '';
-    pauseModuleVideo(mod, true);
+    if (activeHoverModule === mod) {
+      stopActiveHoverVideo();
+    } else {
+      stopHoverVideo(mod);
+      mod.dataset.hovered = '';
+      applyModBaseScale(mod, modBaseScale);
+      mod.style.zIndex = '';
+    }
     hideLabel();
   });
 
