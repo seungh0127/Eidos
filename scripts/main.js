@@ -9,6 +9,28 @@ const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 // fetch the new bytes instead of serving a stale cached copy of the same URL.
 const ASSET_VERSION = '20260712';
 
+// ── Live color adjustment (tuned via /admin/) ─────────────────────────────────
+// Values are shared through localStorage so the admin page can drive this page
+// live (cross-tab, same browser) via the 'storage' event, with no reload.
+const COLOR_KEYS = {
+  brightness: 'eidos_mod_brightness',
+  contrast:   'eidos_mod_contrast',
+  saturate:   'eidos_mod_saturate',
+};
+function applyColorAdjust() {
+  const root = document.documentElement.style;
+  const b = localStorage.getItem(COLOR_KEYS.brightness);
+  const c = localStorage.getItem(COLOR_KEYS.contrast);
+  const s = localStorage.getItem(COLOR_KEYS.saturate);
+  root.setProperty('--mod-brightness', (b || 100) + '%');
+  root.setProperty('--mod-contrast',   (c || 100) + '%');
+  root.setProperty('--mod-saturate',   (s || 100) + '%');
+}
+applyColorAdjust();
+window.addEventListener('storage', e => {
+  if (Object.values(COLOR_KEYS).includes(e.key)) applyColorAdjust();
+});
+
 // ── Module list ───────────────────────────────────────────────────────────────
 const MODULES = [
   'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
