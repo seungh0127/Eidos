@@ -36,6 +36,7 @@ const MODULES = [
   'E-B-1','E-B-2',
   'E-C-1','E-C-2',
   'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
+  'W-A-1','W-A-2','W-A-3',
   'L-A-2','L-A-3',
   'L-B-1','L-B-2','L-B-3',
   'L-C-1','L-C-2','L-C-3','L-C-4',
@@ -47,7 +48,7 @@ const MODULES = [
   'EX-B-1','EX-C-1','EX-D-1',
 ];
 
-const MODULE_CATEGORIES = ['H', 'C', 'S', 'U', 'F', 'E', 'L', 'EX'];
+const MODULE_CATEGORIES = ['H', 'C', 'S', 'U', 'F', 'E', 'W', 'L', 'EX'];
 const MODULES_BY_CATEGORY = MODULES.reduce((groups, file) => {
   const category = file.slice(0, file.indexOf('-'));
   (groups[category] ||= []).push(file);
@@ -80,6 +81,16 @@ const MODULE_SRC = {
   'U-B-1': [2500, 2000], 'U-B-2': [2800, 2000], 'U-B-3': [2800, 2000],
   'U-D-2': [2800, 2000],
   'U-E-1': [2800, 2000], 'U-E-2': [2800, 2000], 'U-E-3': [2800, 2000],
+  'F-B-1': [2400, 2000], 'F-B-2': [2400, 2000],
+  'F-C-1': [2400, 2000], 'F-C-2': [2800, 2000], 'F-C-3': [2400, 2000],
+  'F-D-1': [2600, 2600], 'F-D-2': [2600, 2600], 'F-D-3': [2600, 2600],
+  'F-E-1': [2400, 2000], 'F-E-2': [2400, 2000],
+  'E-A-1': [2800, 2000], 'E-A-2': [2800, 2000], 'E-A-3': [2800, 2000],
+  'E-B-1': [2800, 2000], 'E-B-2': [2800, 2000],
+  'E-C-1': [2800, 2000], 'E-C-2': [2800, 2000],
+  'E-D-1': [2800, 2600], 'E-D-2': [2600, 2600], 'E-D-3': [2600, 2600],
+  'E-D-4': [2600, 2600], 'E-D-5': [2600, 2600], 'E-D-6': [2800, 2600],
+  'W-A-1': [2200, 2200], 'W-A-2': [2500, 2500], 'W-A-3': [2500, 2500],
 };
 const SRC_BASE = 2000;
 
@@ -468,6 +479,8 @@ const MODULE_NAMES = {
   'E-B-1':'Parallel Utility Gripper','E-B-2':'Heavy Clamp Gripper',
   'E-C-1':'Precision Finger Gripper','E-C-2':'Stabilized Detail Holder',
   'E-D-1':'Task End-Effector Base','E-D-2':'Cleaning Brush / Wiper Tool','E-D-3':'Spray / Nozzle Tool','E-D-4':'Powered Driver Tool','E-D-5':'Rescue Cutter / Pull Tool','E-D-6':'Tray Support End',
+  // TODO: names not finalized yet — placeholder until product naming is confirmed
+  'W-A-1':'TBD Module W-A-1','W-A-2':'TBD Module W-A-2','W-A-3':'TBD Module W-A-3',
   'L-A-1':'Standard Biped Legs','L-A-2':'Stabilized Work Biped','L-A-3':'Compact Biped Legs',
   'L-B-1':'Foot-Wheel Biped','L-B-2':'Roller-Knee Biped','L-B-3':'Compact Quadruped',
   'L-C-1':'Compact Quadruped','L-C-2':'Compact Quadruped','L-C-3':'Heavy Quadruped Carrier','L-C-4':'Caterpillar Quadruped',
@@ -504,6 +517,16 @@ const HQ_MODULES = new Set([
   'U-C-1','U-C-2',
   'U-D-1','U-D-2',
   'U-E-1','U-E-2','U-E-3',
+  'F-A-1','F-A-2','F-A-3',
+  'F-B-1','F-B-2',
+  'F-C-1','F-C-2','F-C-3',
+  'F-D-1','F-D-2','F-D-3',
+  'F-E-1','F-E-2',
+  'E-A-1','E-A-2','E-A-3',
+  'E-B-1','E-B-2',
+  'E-C-1','E-C-2',
+  'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
+  'W-A-1','W-A-2','W-A-3',
 ]);
 
 // Modules with MP4 hover clips and MOV overlay fallbacks.
@@ -528,6 +551,16 @@ const HEVC_MODULES = new Set([
   'U-C-1','U-C-2',
   'U-D-1','U-D-2',
   'U-E-1','U-E-2','U-E-3',
+  'F-A-1','F-A-2','F-A-3',
+  'F-B-1','F-B-2',
+  'F-C-1','F-C-2','F-C-3',
+  'F-D-1','F-D-2','F-D-3',
+  'F-E-1','F-E-2',
+  'E-A-1','E-A-2','E-A-3',
+  'E-B-1','E-B-2',
+  'E-C-1','E-C-2',
+  'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
+  'W-A-1','W-A-2','W-A-3',
 ]);
 
 function getHoverVideoSrc(file) {
