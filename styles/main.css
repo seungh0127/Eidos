@@ -43,7 +43,7 @@
   pointer-events: none;
   background: transparent;
   object-fit: contain;
-  filter: brightness(var(--mod-brightness)) contrast(var(--mod-contrast)) saturate(var(--mod-saturate));
+  filter: url(#eidos-color-filter) brightness(var(--mod-brightness)) contrast(var(--mod-contrast)) saturate(var(--mod-saturate));
 }
 /* At rest only the WebP thumb shows; the video is swapped in once it is ready */
 .module-video { display: none; }

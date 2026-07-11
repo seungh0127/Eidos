@@ -16,7 +16,7 @@
 
 <header id="admin-header">
   <h1>Module Color Admin</h1>
-  <p>Adjust brightness / contrast / saturation for the main-page module thumbnails and videos. Changes apply instantly — including live in the main site if it is open in another tab of this browser.</p>
+  <p>Adjust brightness / contrast / saturation, tone curves, and shadows / highlights for the main-page module thumbnails and videos. Changes apply instantly — including live in the main site if it is open in another tab of this browser.</p>
 </header>
 
 <main id="admin-main">
@@ -24,7 +24,8 @@
     <div class="preview-grid" id="preview-grid"></div>
   </section>
 
-  <section id="admin-controls" aria-label="Controls">
+  <section id="admin-controls" aria-label="Basic controls">
+    <h2 class="section-title">Basic</h2>
     <div class="control-row">
       <label for="ctl-brightness">
         <span class="control-name">Brightness</span>
@@ -48,20 +49,68 @@
       </label>
       <input type="range" id="ctl-saturate" min="0" max="200" value="100" step="1">
     </div>
+  </section>
 
+  <section id="admin-tone" aria-label="Shadows and highlights">
+    <h2 class="section-title">Tone</h2>
+    <div class="control-row">
+      <label for="ctl-shadows">
+        <span class="control-name">Shadows</span>
+        <span class="control-value" id="val-shadows">0</span>
+      </label>
+      <input type="range" id="ctl-shadows" min="-100" max="100" value="0" step="1">
+    </div>
+    <div class="control-row">
+      <label for="ctl-highlights">
+        <span class="control-name">Highlights</span>
+        <span class="control-value" id="val-highlights">0</span>
+      </label>
+      <input type="range" id="ctl-highlights" min="-100" max="100" value="0" step="1">
+    </div>
+  </section>
+
+  <section id="admin-curves" aria-label="Curves">
+    <h2 class="section-title">Curves</h2>
+    <div class="curve-grid">
+      <div class="curve-block" data-curve="master">
+        <h3>Curve</h3>
+        <canvas class="curve-canvas" width="200" height="200"></canvas>
+        <button type="button" class="curve-reset">Reset</button>
+      </div>
+      <div class="curve-block" data-curve="r">
+        <h3 class="curve-r">Red</h3>
+        <canvas class="curve-canvas" width="200" height="200"></canvas>
+        <button type="button" class="curve-reset">Reset</button>
+      </div>
+      <div class="curve-block" data-curve="g">
+        <h3 class="curve-g">Green</h3>
+        <canvas class="curve-canvas" width="200" height="200"></canvas>
+        <button type="button" class="curve-reset">Reset</button>
+      </div>
+      <div class="curve-block" data-curve="b">
+        <h3 class="curve-b">Blue</h3>
+        <canvas class="curve-canvas" width="200" height="200"></canvas>
+        <button type="button" class="curve-reset">Reset</button>
+      </div>
+    </div>
+    <p class="curve-help">Click to add a point, drag to move, double-click a point to remove it. Endpoints can move up/down but stay pinned to the left/right edges.</p>
+  </section>
+
+  <section id="admin-export" aria-label="Export">
     <div class="control-actions">
-      <button type="button" id="btn-reset">Reset to default</button>
-      <button type="button" id="btn-copy">Copy CSS values</button>
+      <button type="button" id="btn-reset">Reset all to default</button>
+      <button type="button" id="btn-copy">Copy full config (JSON)</button>
     </div>
     <p id="copy-feedback" role="status" aria-live="polite"></p>
 
     <details id="export-note">
       <summary>How to make this the permanent site default</summary>
-      <p>These values are saved to this browser only (localStorage), so they preview live but are not visible to other visitors. To ship them as the new default for everyone, copy the CSS values above and set them as the <code>:root</code> defaults in <code>styles/main.css</code> (<code>--mod-brightness</code>, <code>--mod-contrast</code>, <code>--mod-saturate</code>), then commit.</p>
+      <p>All of the above is saved to this browser only (localStorage), so it previews live but is not visible to other visitors. To ship it as the new default for everyone, copy the full config and send it over (or paste it into the color defaults in <code>scripts/main.js</code>) so it can be committed.</p>
     </details>
   </section>
 </main>
 
+<script src="../scripts/color-curve.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>

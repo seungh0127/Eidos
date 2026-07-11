@@ -57,11 +57,14 @@ html, body {
   max-width: 88%;
   max-height: 88%;
   object-fit: contain;
-  filter: brightness(var(--mod-brightness, 100%)) contrast(var(--mod-contrast, 100%)) saturate(var(--mod-saturate, 100%));
+  filter: url(#eidos-admin-preview-filter) brightness(var(--mod-brightness, 100%)) contrast(var(--mod-contrast, 100%)) saturate(var(--mod-saturate, 100%));
   transition: filter 0.05s linear;
 }
 
-#admin-controls {
+#admin-controls,
+#admin-tone,
+#admin-curves,
+#admin-export {
   background: #fff;
   border: 1px solid #e2e2e5;
   border-radius: 8px;
@@ -69,6 +72,15 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0;
 }
 .control-row { display: flex; flex-direction: column; gap: 6px; }
 .control-row label {
@@ -82,6 +94,56 @@ html, body {
 .control-row input[type="range"] {
   width: 100%;
   accent-color: #187CFF;
+}
+
+/* ── Curves ── */
+.curve-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+.curve-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.curve-block h3 {
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+  color: #333;
+  align-self: flex-start;
+}
+.curve-block h3.curve-r { color: #e5484d; }
+.curve-block h3.curve-g { color: #2f9e44; }
+.curve-block h3.curve-b { color: #1971c2; }
+.curve-canvas {
+  width: 100%;
+  max-width: 200px;
+  aspect-ratio: 1 / 1;
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 6px;
+  touch-action: none;
+  cursor: crosshair;
+}
+.curve-reset {
+  font-family: inherit;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid #d6d6da;
+  background: #f7f7f8;
+  cursor: pointer;
+  color: #555;
+}
+.curve-reset:hover { background: #eee; }
+.curve-help {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .control-actions {

@@ -16,7 +16,23 @@ const COLOR_KEYS = {
   brightness: 'eidos_mod_brightness',
   contrast:   'eidos_mod_contrast',
   saturate:   'eidos_mod_saturate',
+  curveMaster: 'eidos_mod_curve_master',
+  curveR:      'eidos_mod_curve_r',
+  curveG:      'eidos_mod_curve_g',
+  curveB:      'eidos_mod_curve_b',
+  shadows:     'eidos_mod_shadows',
+  highlights:  'eidos_mod_highlights',
 };
+
+const COLOR_FILTER_ID = 'eidos-color-filter';
+
+function parsePoints(json) {
+  try {
+    const p = JSON.parse(json);
+    return Array.isArray(p) && p.length >= 2 ? p : null;
+  } catch { return null; }
+}
+
 function applyColorAdjust() {
   const root = document.documentElement.style;
   const b = localStorage.getItem(COLOR_KEYS.brightness);
@@ -25,6 +41,18 @@ function applyColorAdjust() {
   root.setProperty('--mod-brightness', (b || 100) + '%');
   root.setProperty('--mod-contrast',   (c || 100) + '%');
   root.setProperty('--mod-saturate',   (s || 100) + '%');
+
+  const master = parsePoints(localStorage.getItem(COLOR_KEYS.curveMaster)) || ColorCurve.IDENTITY_POINTS;
+  const rPts   = parsePoints(localStorage.getItem(COLOR_KEYS.curveR)) || ColorCurve.IDENTITY_POINTS;
+  const gPts   = parsePoints(localStorage.getItem(COLOR_KEYS.curveG)) || ColorCurve.IDENTITY_POINTS;
+  const bPts   = parsePoints(localStorage.getItem(COLOR_KEYS.curveB)) || ColorCurve.IDENTITY_POINTS;
+  const shadows    = Number(localStorage.getItem(COLOR_KEYS.shadows)    || 0);
+  const highlights = Number(localStorage.getItem(COLOR_KEYS.highlights) || 0);
+
+  const lutR = ColorCurve.composeChannelLUT(master, rPts, shadows, highlights);
+  const lutG = ColorCurve.composeChannelLUT(master, gPts, shadows, highlights);
+  const lutB = ColorCurve.composeChannelLUT(master, bPts, shadows, highlights);
+  ColorCurve.applyLUTsToFilter(COLOR_FILTER_ID, lutR, lutG, lutB);
 }
 applyColorAdjust();
 window.addEventListener('storage', e => {
