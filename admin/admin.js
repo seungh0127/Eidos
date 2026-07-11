@@ -56,21 +56,21 @@ for (const file of PREVIEW_VIDEOS) {
   grid.appendChild(cell);
 }
 
-// ── Drag-to-scroll (mouse) — touch/trackpad already scroll natively ───────────
+// ── Drag-to-scroll (mouse, vertical) — touch/trackpad already scroll natively ─
 (() => {
-  let isDown = false, startX = 0, startScroll = 0, moved = false;
+  let isDown = false, startY = 0, startScroll = 0, moved = false;
   grid.addEventListener('mousedown', e => {
     isDown = true;
     moved = false;
-    startX = e.clientX;
-    startScroll = grid.scrollLeft;
+    startY = e.clientY;
+    startScroll = grid.scrollTop;
     grid.classList.add('dragging');
   });
   window.addEventListener('mousemove', e => {
     if (!isDown) return;
-    const dx = e.clientX - startX;
-    if (Math.abs(dx) > 3) moved = true;
-    grid.scrollLeft = startScroll - dx;
+    const dy = e.clientY - startY;
+    if (Math.abs(dy) > 3) moved = true;
+    grid.scrollTop = startScroll - dy;
   });
   window.addEventListener('mouseup', () => {
     isDown = false;

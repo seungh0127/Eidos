@@ -18,12 +18,15 @@ html, body {
   flex: 0 0 420px;
   width: 420px;
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden;
   border-right: 1px solid #e2e2e5;
   background: #f4f4f5;
+  display: flex;
+  flex-direction: column;
 }
 
 #admin-header {
+  flex: 0 0 auto;
   padding: 32px 24px 16px;
 }
 #admin-header h1 {
@@ -47,25 +50,32 @@ html, body {
   gap: 24px;
 }
 
+/* Preview box fills the remaining left-column height; it does not scroll
+   itself — the .preview-grid inside it scrolls vertically instead. */
 #admin-preview {
+  flex: 1 1 auto;
+  min-height: 0;
   margin: 0 24px 24px;
   background: #fff;
   border: 1px solid #e2e2e5;
   border-radius: 8px;
   padding: 20px;
+  display: flex;
+  overflow: hidden;
 }
 .preview-grid {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   flex-wrap: nowrap;
   gap: 14px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   scroll-behavior: smooth;
   cursor: grab;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  padding-bottom: 4px;
+  padding-right: 4px;
 }
 .preview-grid.dragging {
   cursor: grabbing;
@@ -73,7 +83,7 @@ html, body {
 }
 .preview-cell {
   flex: 0 0 auto;
-  width: 160px;
+  width: 100%;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
