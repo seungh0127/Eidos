@@ -7,7 +7,7 @@ const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 // Bump this whenever module thumb/video assets are re-encoded so browsers
 // fetch the new bytes instead of serving a stale cached copy of the same URL.
-const ASSET_VERSION = '20260712';
+const ASSET_VERSION = '20260713';
 
 // ── Live color adjustment (tuned via /admin/) ─────────────────────────────────
 // Values are shared through localStorage so the admin page can drive this page
@@ -74,7 +74,7 @@ const MODULES = [
   'S-A-1','S-A-2','S-A-3',
   'S-B-1','S-B-2',
   'S-C-1','S-C-2','S-C-3',
-  'S-D-1','S-D-2','S-D-3',
+  'S-D-1','S-D-2',
   'S-E-1','S-E-2','S-E-3',
   'U-A-1','U-A-2',
   'U-B-1','U-B-2','U-B-3',
@@ -354,7 +354,7 @@ function setupModuleMedia(el, file) {
   if (img) {
     img.style.width  = dw + 'px';
     img.style.height = dh + 'px';
-    img.src = `assets/thumbs/${file}.webp?v=${ASSET_VERSION}`;
+    img.src = `assets/thumbs/${file}.png?v=${ASSET_VERSION}`;
     img.alt = file;
   }
   if (video) {
@@ -517,7 +517,7 @@ const MODULE_NAMES = {
   'S-A-1':'Soft Assist Shoulder Base','S-A-2':'Dual Soft Shoulder','S-A-3':'Dual Soft Shoulder',
   'S-B-1':'High-Torque Shoulder','S-B-2':'Piston-Assist Shoulder',
   'S-C-1':'Compact Precision Shoulder','S-C-2':'Camera Rig Shoulder','S-C-3':'Tool Rail Shoulder',
-  'S-D-1':'Wide Utility Shoulder','S-D-2':'Multi-Arm Bridge','S-D-3':'Tray Support Shoulder',
+  'S-D-1':'Wide Utility Shoulder','S-D-2':'Multi-Arm Bridge',
   'S-E-1':'Rear Assist Shoulder','S-E-2':'Service Hitch Shoulder','S-E-3':'Studio Boom Shoulder',
   'U-A-1':'Short Service Link','U-A-2':'Balanced Link Arm',
   'U-B-1':'Linear Power Arm','U-B-2':'Dual Piston Arm','U-B-3':'Load Lock Arm',

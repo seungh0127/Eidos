@@ -38,7 +38,7 @@ for (const file of PREVIEW_THUMBS) {
   const cell = document.createElement('div');
   cell.className = 'preview-cell';
   const img = document.createElement('img');
-  img.src = `../assets/thumbs/${file}.webp`;
+  img.src = `../assets/thumbs/${file}.png`;
   img.alt = file;
   cell.appendChild(img);
   grid.appendChild(cell);
