@@ -38,11 +38,25 @@ html, body {
   padding: 20px;
 }
 .preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+}
+.preview-grid.dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
 }
 .preview-cell {
+  flex: 0 0 auto;
+  width: 240px;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;

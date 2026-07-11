@@ -19,8 +19,19 @@ function readStoredNumber(key, fallback) {
   return v === null ? fallback : Number(v);
 }
 
-// ── Preview content: a handful of real gallery thumbs + one hover video ───────
-const PREVIEW_THUMBS = ['H-A-1', 'H-B-2', 'C-D-2', 'C-A-1', 'S-A-1', 'W-A-2', 'F-D-1', 'E-A-1'];
+// ── Preview content: a wide sample of real module thumbs + a few hover videos ─
+// A single horizontal row, drag-scrollable, so many sources can be checked
+// without the grid wrapping.
+const PREVIEW_THUMBS = [
+  'H-A-1', 'H-B-2', 'H-C-3', 'H-D-1', 'H-E-1',
+  'C-A-1', 'C-B-2', 'C-D-2', 'C-E-1',
+  'S-A-1', 'S-C-2', 'S-E-1',
+  'U-A-1', 'U-B-2', 'U-E-1',
+  'F-A-1', 'F-D-1', 'F-E-1',
+  'E-A-1', 'E-D-1',
+  'W-A-1', 'W-A-2',
+];
+const PREVIEW_VIDEOS = ['H-A-1', 'C-D-2', 'S-A-1', 'F-D-1', 'W-A-2'];
 
 const grid = document.getElementById('preview-grid');
 for (const file of PREVIEW_THUMBS) {
@@ -32,17 +43,41 @@ for (const file of PREVIEW_THUMBS) {
   cell.appendChild(img);
   grid.appendChild(cell);
 }
-(() => {
+for (const file of PREVIEW_VIDEOS) {
   const cell = document.createElement('div');
   cell.className = 'preview-cell';
   const video = document.createElement('video');
-  video.src = '../assets/H-A-1.mp4';
+  video.src = `../assets/${file}.mp4`;
   video.muted = true;
   video.loop = true;
   video.playsInline = true;
   video.autoplay = true;
   cell.appendChild(video);
   grid.appendChild(cell);
+}
+
+// ── Drag-to-scroll (mouse) — touch/trackpad already scroll natively ───────────
+(() => {
+  let isDown = false, startX = 0, startScroll = 0, moved = false;
+  grid.addEventListener('mousedown', e => {
+    isDown = true;
+    moved = false;
+    startX = e.clientX;
+    startScroll = grid.scrollLeft;
+    grid.classList.add('dragging');
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 3) moved = true;
+    grid.scrollLeft = startScroll - dx;
+  });
+  window.addEventListener('mouseup', () => {
+    isDown = false;
+    grid.classList.remove('dragging');
+  });
+  // Prevent the drag from being interpreted as an image/video drag-out.
+  grid.addEventListener('dragstart', e => e.preventDefault());
 })();
 
 // ── Curve editors (declared before anything that calls updateCurveFilter) ─────
