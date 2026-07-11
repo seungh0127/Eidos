@@ -13,6 +13,21 @@ const ColorCurve = (() => {
     const pts = (points && points.length >= 2 ? points : IDENTITY_POINTS)
       .slice().sort((a, b) => a[0] - b[0]);
     const lut = new Array(256);
+
+    // Exactly 2 points (the default, and any user-reduced curve) must render
+    // as a true straight line — Catmull-Rom with duplicated phantom endpoints
+    // does NOT reduce to a line (it bows away from identity by ~12/255 at the
+    // quarter points), so short-circuit to plain linear interpolation here.
+    if (pts.length === 2) {
+      const [x0, y0] = pts[0], [x1, y1] = pts[1];
+      const dx = x1 - x0;
+      for (let x = 0; x <= 255; x++) {
+        const t = dx === 0 ? 0 : (x - x0) / dx;
+        lut[x] = clamp(Math.round(y0 + (y1 - y0) * t), 0, 255);
+      }
+      return lut;
+    }
+
     for (let x = 0; x <= 255; x++) {
       // find segment [p1,p2] containing x
       let seg = pts.length - 2;
