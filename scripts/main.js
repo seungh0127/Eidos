@@ -7,7 +7,7 @@ const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 // Bump this whenever module thumb/video assets are re-encoded so browsers
 // fetch the new bytes instead of serving a stale cached copy of the same URL.
-const ASSET_VERSION = '20260711';
+const ASSET_VERSION = '20260712';
 
 // ── Module list ───────────────────────────────────────────────────────────────
 const MODULES = [
