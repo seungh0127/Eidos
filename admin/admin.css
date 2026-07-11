@@ -32,10 +32,14 @@ html, body {
 }
 
 #admin-preview {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: #fff;
   border: 1px solid #e2e2e5;
   border-radius: 8px;
   padding: 20px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 .preview-grid {
   display: flex;
