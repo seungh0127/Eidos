@@ -15,8 +15,8 @@ html, body {
 }
 
 #admin-left {
-  flex: 0 0 420px;
-  width: 420px;
+  flex: 0 0 50%;
+  width: 50%;
   height: 100vh;
   overflow: hidden;
   border-right: 1px solid #e2e2e5;
