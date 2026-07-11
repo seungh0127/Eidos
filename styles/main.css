@@ -277,3 +277,4 @@
 body.mod-overlay-open #logo-btn img { filter: brightness(0) invert(1); }
 body.mod-overlay-open #main-nav { opacity: 0; pointer-events: none; transition: opacity 0.28s ease; }
 #main-nav { transition: opacity 0.28s ease; }
+#main-nav .nav-link { color: #ffffff; }
