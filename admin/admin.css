@@ -53,6 +53,7 @@ html, body {
 /* Preview box fills the remaining left-column height; it does not scroll
    itself — the .preview-grid inside it scrolls vertically instead. */
 #admin-preview {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   margin: 0 24px 24px;
@@ -62,6 +63,36 @@ html, body {
   padding: 20px;
   display: flex;
   overflow: hidden;
+}
+
+/* Press-and-hold to compare against the unadjusted original */
+#btn-compare {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d6d6da;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  color: #333;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+#btn-compare:hover { background: #fff; }
+#btn-compare.active {
+  background: #187CFF;
+  border-color: #187CFF;
+  color: #fff;
+}
+#admin-preview.comparing .preview-cell img,
+#admin-preview.comparing .preview-cell video {
+  filter: none !important;
 }
 .preview-grid {
   display: flex;

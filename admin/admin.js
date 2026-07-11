@@ -80,6 +80,27 @@ for (const file of PREVIEW_VIDEOS) {
   grid.addEventListener('dragstart', e => e.preventDefault());
 })();
 
+// ── Press-and-hold "Original" button: compare against the unadjusted image ──
+(() => {
+  const btn = document.getElementById('btn-compare');
+  const preview = document.getElementById('admin-preview');
+  function showOriginal() {
+    preview.classList.add('comparing');
+    btn.classList.add('active');
+  }
+  function showAdjusted() {
+    preview.classList.remove('comparing');
+    btn.classList.remove('active');
+  }
+  btn.addEventListener('mousedown', showOriginal);
+  window.addEventListener('mouseup', showAdjusted);
+  btn.addEventListener('touchstart', e => { e.preventDefault(); showOriginal(); }, { passive: false });
+  window.addEventListener('touchend', showAdjusted);
+  window.addEventListener('touchcancel', showAdjusted);
+  // Avoid a stuck "original" state if focus/drag leaves the button oddly.
+  btn.addEventListener('mouseleave', e => { if (e.buttons === 0) showAdjusted(); });
+})();
+
 // ── Curve editors (declared before anything that calls updateCurveFilter) ─────
 function createCurveEditor(canvas, initialPoints, onChange) {
   const size = canvas.width; // logical == pixel (square canvas)
