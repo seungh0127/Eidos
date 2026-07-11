@@ -5,6 +5,10 @@ const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 // Safari (desktop + iOS) doesn't support WebM alpha — use HEVC .mov instead
 const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+// Bump this whenever module thumb/video assets are re-encoded so browsers
+// fetch the new bytes instead of serving a stale cached copy of the same URL.
+const ASSET_VERSION = '20260711';
+
 // ── Module list ───────────────────────────────────────────────────────────────
 const MODULES = [
   'H-A-1','H-A-2','H-A-3','H-A-4','H-A-5',
@@ -300,7 +304,7 @@ function setupModuleMedia(el, file) {
   if (img) {
     img.style.width  = dw + 'px';
     img.style.height = dh + 'px';
-    img.src = `assets/thumbs/${file}.webp`;
+    img.src = `assets/thumbs/${file}.webp?v=${ASSET_VERSION}`;
     img.alt = file;
   }
   if (video) {
@@ -568,13 +572,14 @@ function getHoverVideoSrc(file) {
   // ship a single H.264 MP4 — hardware-decoded on both Chrome and Safari with no
   // alpha overhead (keeps Safari light). Placeholder modules keep their WebM
   // (Chrome plays it; on Safari the WebP thumb simply stays visible).
-  if (HEVC_MODULES.has(file)) return `assets/${file}.mp4`;
-  return `assets/${file}.webm`;
+  const path = HEVC_MODULES.has(file) ? `assets/${file}.mp4` : `assets/${file}.webm`;
+  return `${path}?v=${ASSET_VERSION}`;
 }
 
 function getDetailVideoSrc(file) {
   const ext = (IS_SAFARI && HEVC_MODULES.has(file)) ? 'mov' : 'webm';
-  return HQ_MODULES.has(file) ? `assets/hq/${file}.${ext}` : `assets/${file}.${ext}`;
+  const path = HQ_MODULES.has(file) ? `assets/hq/${file}.${ext}` : `assets/${file}.${ext}`;
+  return `${path}?v=${ASSET_VERSION}`;
 }
 
 function openOverlay(file) {
