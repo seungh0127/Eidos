@@ -573,11 +573,7 @@ function getHoverVideoSrc(file) {
 }
 
 function getDetailVideoSrc(file) {
-  // Overlay always prefers HEVC+alpha .mov when available (all modern
-  // Chromium/WebKit browsers we target can decode it), since it renders
-  // clean alpha edges without the WebM/VP9 matte-haze issue. Placeholder
-  // modules without a .mov fall back to webm.
-  const ext = HEVC_MODULES.has(file) ? 'mov' : 'webm';
+  const ext = (IS_SAFARI && HEVC_MODULES.has(file)) ? 'mov' : 'webm';
   return HQ_MODULES.has(file) ? `assets/hq/${file}.${ext}` : `assets/${file}.${ext}`;
 }
 
