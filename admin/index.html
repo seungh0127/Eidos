@@ -14,16 +14,19 @@
 </head>
 <body>
 
-<header id="admin-header">
-  <h1>Module Color Admin</h1>
-  <p>Adjust brightness / contrast / saturation, tone curves, and shadows / highlights for the main-page module thumbnails and videos. Changes apply instantly — including live in the main site if it is open in another tab of this browser.</p>
-</header>
+<div id="admin-layout">
+<aside id="admin-left">
+  <header id="admin-header">
+    <h1>Module Color Admin</h1>
+    <p>Adjust brightness / contrast / saturation, tone curves, and shadows / highlights for the main-page module thumbnails and videos. Changes apply instantly — including live in the main site if it is open in another tab of this browser.</p>
+  </header>
 
-<main id="admin-main">
   <section id="admin-preview" aria-label="Live preview">
     <div class="preview-grid" id="preview-grid"></div>
   </section>
+</aside>
 
+<main id="admin-main">
   <section id="admin-controls" aria-label="Basic controls">
     <h2 class="section-title">Basic</h2>
     <div class="control-row">
@@ -109,6 +112,7 @@
     </details>
   </section>
 </main>
+</div>
 
 <script src="../scripts/color-curve.js"></script>
 <script src="admin.js"></script>
