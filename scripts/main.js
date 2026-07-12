@@ -259,10 +259,13 @@ const modDetailPrdtLine  = document.getElementById('mod-detail-prdt-line');
 const modDetailNameLine  = document.getElementById('mod-detail-name-line');
 const modDetailTitle     = document.getElementById('mod-detail-title');
 const modDetailVideo     = document.getElementById('mod-detail-video');
+const modNavPrev         = document.getElementById('mod-nav-prev');
+const modNavNext         = document.getElementById('mod-nav-next');
 
 // ── Overlay state ─────────────────────────────────────────────────────────────
 let overlayOpen = false;
 let overlayRevealRaf = null;
+let currentOverlayFile = null;
 
 // ── Element pool ──────────────────────────────────────────────────────────────
 const modulePool = [];
@@ -698,6 +701,7 @@ function getDetailVideoSrc(file) {
 }
 
 function openOverlay(file) {
+  currentOverlayFile = file;
   const name = MODULE_NAMES[file] || '';
   modDetailCompact.textContent  = compactCode(file);
   modDetailPrdtLine.textContent = `PRDT CODE : ${file}`;
@@ -752,6 +756,20 @@ function closeOverlay() {
     modDetailVideo.load();
   }, 300);
 }
+
+// Step to the next/previous module within the same category (e.g. H-A-2 ->
+// H-A-3), wrapping around at either end so the arrows always do something.
+function stepOverlay(direction) {
+  if (!currentOverlayFile) return;
+  const category = currentOverlayFile.slice(0, currentOverlayFile.indexOf('-'));
+  const categoryModules = MODULES.filter(f => f.slice(0, f.indexOf('-')) === category);
+  if (categoryModules.length <= 1) return;
+  const idx = categoryModules.indexOf(currentOverlayFile);
+  const nextIdx = positiveMod(idx + direction, categoryModules.length);
+  openOverlay(categoryModules[nextIdx]);
+}
+modNavPrev.addEventListener('click', e => { e.stopPropagation(); stepOverlay(-1); });
+modNavNext.addEventListener('click', e => { e.stopPropagation(); stepOverlay(1); });
 
 // #mod-detail-video is pointer-events:none (anti-save), so its interactions are
 // handled on the parent #mod-overlay-content via coordinate hit-testing.
