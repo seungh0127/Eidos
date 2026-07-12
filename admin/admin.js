@@ -29,9 +29,9 @@ const PREVIEW_THUMBS = [
   'U-A-1', 'U-B-2', 'U-E-1',
   'F-A-1', 'F-D-1', 'F-E-1',
   'E-A-1', 'E-D-1',
-  'W-A-1', 'W-A-2',
+  'CE-R-1', 'CE-H-1',
 ];
-const PREVIEW_VIDEOS = ['H-A-1', 'C-D-2', 'S-A-1', 'F-D-1', 'W-A-2'];
+const PREVIEW_VIDEOS = ['H-A-1', 'C-D-2', 'S-A-1', 'F-D-1', 'CE-H-1'];
 
 const grid = document.getElementById('preview-grid');
 for (const file of PREVIEW_THUMBS) {

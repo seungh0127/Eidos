@@ -305,12 +305,12 @@ html.is-safari #mod-overlay-bg {
   opacity: 1;
   transform: translateY(var(--detail-video-y)) scale(1);
 }
-/* W-category modules render slightly smaller in the detail overlay. */
-#mod-overlay.category-w #mod-detail-video {
+/* CE-category modules render slightly smaller in the detail overlay. */
+#mod-overlay.category-ce #mod-detail-video {
   --detail-video-scale: 0.88;
 }
-/* W-A-2 sits slightly lower than other modules in the detail overlay. */
-#mod-overlay.module-w-a-2 #mod-detail-video {
+/* CE-H-1 sits slightly lower than other modules in the detail overlay. */
+#mod-overlay.module-ce-h-1 #mod-detail-video {
   --detail-video-y: 28px;
 }
 /* Cursor over the overlay video pause zone (inner 70%) */

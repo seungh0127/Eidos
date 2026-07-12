@@ -92,7 +92,7 @@ const MODULES = [
   'E-B-1','E-B-2',
   'E-C-1','E-C-2',
   'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
-  'W-A-1','W-A-2','W-A-3',
+  'CE-R-1','CE-H-1','CE-IB-1',
   'L-A-2','L-A-3',
   'L-B-1','L-B-2','L-B-3',
   'L-C-1','L-C-2','L-C-3','L-C-4',
@@ -139,7 +139,7 @@ const MODULE_SRC = {
   'E-C-1': [2800, 2000], 'E-C-2': [2800, 2000],
   'E-D-1': [2800, 2600], 'E-D-2': [2600, 2600], 'E-D-3': [2600, 2600],
   'E-D-4': [2600, 2600], 'E-D-5': [2600, 2600], 'E-D-6': [2800, 2600],
-  'W-A-1': [2200, 2200], 'W-A-2': [2500, 2500], 'W-A-3': [2500, 2500],
+  'CE-R-1': [2200, 2200], 'CE-H-1': [2500, 2500], 'CE-IB-1': [2500, 2500],
 };
 const SRC_BASE = 2000;
 
@@ -602,8 +602,7 @@ const MODULE_NAMES = {
   'E-B-1':'Parallel Utility Gripper','E-B-2':'Heavy Clamp Gripper',
   'E-C-1':'Precision Finger Gripper','E-C-2':'Stabilized Detail Holder',
   'E-D-1':'Task End-Effector Base','E-D-2':'Cleaning Brush / Wiper Tool','E-D-3':'Spray / Nozzle Tool','E-D-4':'Powered Driver Tool','E-D-5':'Rescue Cutter / Pull Tool','E-D-6':'Tray Support End',
-  // TODO: names not finalized yet — placeholder until product naming is confirmed
-  'W-A-1':'TBD Module W-A-1','W-A-2':'TBD Module W-A-2','W-A-3':'TBD Module W-A-3',
+  'CE-R-1':'Rotation Extension','CE-H-1':'Hitch Extension','CE-IB-1':'Integrated Balancer Extension',
   'L-A-1':'Standard Biped Legs','L-A-2':'Stabilized Work Biped','L-A-3':'Compact Biped Legs',
   'L-B-1':'Foot-Wheel Biped','L-B-2':'Roller-Knee Biped','L-B-3':'Compact Quadruped',
   'L-C-1':'Compact Quadruped','L-C-2':'Compact Quadruped','L-C-3':'Heavy Quadruped Carrier','L-C-4':'Caterpillar Quadruped',
@@ -649,7 +648,7 @@ const HQ_MODULES = new Set([
   'E-B-1','E-B-2',
   'E-C-1','E-C-2',
   'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
-  'W-A-1','W-A-2','W-A-3',
+  'CE-R-1','CE-H-1','CE-IB-1',
 ]);
 
 // Modules with MP4 hover clips and MOV overlay fallbacks.
@@ -683,7 +682,7 @@ const HEVC_MODULES = new Set([
   'E-B-1','E-B-2',
   'E-C-1','E-C-2',
   'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
-  'W-A-1','W-A-2','W-A-3',
+  'CE-R-1','CE-H-1','CE-IB-1',
 ]);
 
 function getHoverVideoSrc(file) {
@@ -711,8 +710,8 @@ function openOverlay(file) {
   stopActiveHoverVideo();               // release any main-page hover video first
   if (overlayRevealRaf) cancelAnimationFrame(overlayRevealRaf);
   modOverlay.classList.remove('content-ready');
-  modOverlay.classList.toggle('category-w', file.startsWith('W-'));
-  modOverlay.classList.toggle('module-w-a-2', file === 'W-A-2');
+  modOverlay.classList.toggle('category-ce', file.startsWith('CE-'));
+  modOverlay.classList.toggle('module-ce-h-1', file === 'CE-H-1');
   modOverlay.setAttribute('aria-hidden', 'false');
   modOverlay.classList.add('open');
   document.body.classList.add('mod-overlay-open');
