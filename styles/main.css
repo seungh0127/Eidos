@@ -111,6 +111,13 @@
 #mod-overlay-bg {
   position: absolute;
   inset: 0;
+  background: rgba(255, 255, 255, 0.90);
+}
+/* Chrome drops the alpha detail video onto a hardware overlay plane that
+   doesn't composite correctly under backdrop-filter, producing a visible
+   seam at the video's bounds. Safari doesn't hit that bug, so restore the
+   blur there only (.is-safari is set on <html> via IS_SAFARI in main.js). */
+html.is-safari #mod-overlay-bg {
   background: rgba(255, 255, 255, 0.70);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -122,8 +129,8 @@
   left: 50%;
   transform: translate(-50%, 55%);
   /* 화면이 작아질수록 원이 커짐: 200vw가 1500px 상한을 초과하면 1500px로 고정 */
-  width: clamp(1000px, 200vw, 1900px);
-  aspect-ratio: 1 / 1;
+  width: clamp(1200px, 240vw, 2300px);
+  height: clamp(1000px, 200vw, 1900px);
   border-radius: 50%;
   background: radial-gradient(50% 50% at 50% 50%, #187CFF 0%, rgba(0, 212, 255, 0) 100%);
   background: radial-gradient(
@@ -245,14 +252,16 @@
 #mod-detail-video {
   position: relative;
   z-index: 4;
-  width: clamp(460px, 82vmin, 1000px);
-  height: clamp(460px, 82vmin, 1000px);
+  --detail-video-scale: 1;
+  --detail-video-y: 0px;
+  width: calc(clamp(460px, 82vmin, 1000px) * var(--detail-video-scale));
+  height: calc(clamp(460px, 82vmin, 1000px) * var(--detail-video-scale));
   object-fit: contain;
   display: block;
   pointer-events: none;   /* interactions handled on #mod-overlay-content */
   cursor: default;
   opacity: 0;
-  transform: translateY(12px) scale(0.99);
+  transform: translateY(calc(12px + var(--detail-video-y))) scale(0.99);
   transition: opacity 0.58s ease 0.05s, transform 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
   will-change: opacity, transform;
 }
@@ -260,10 +269,21 @@
   opacity: 1;
   transform: translate(-50%, 0);
 }
-#mod-overlay.content-ready #mod-detail-title,
-#mod-overlay.content-ready #mod-detail-video {
+#mod-overlay.content-ready #mod-detail-title {
   opacity: 1;
   transform: translateY(0) scale(1);
+}
+#mod-overlay.content-ready #mod-detail-video {
+  opacity: 1;
+  transform: translateY(var(--detail-video-y)) scale(1);
+}
+/* W-category modules render slightly smaller in the detail overlay. */
+#mod-overlay.category-w #mod-detail-video {
+  --detail-video-scale: 0.88;
+}
+/* W-A-2 sits slightly lower than other modules in the detail overlay. */
+#mod-overlay.module-w-a-2 #mod-detail-video {
+  --detail-video-y: 28px;
 }
 /* Cursor over the overlay video pause zone (inner 70%) */
 #mod-overlay-content.over-pause-zone { cursor: grab; }
@@ -275,8 +295,8 @@
     top: clamp(122px, calc(12vh + 42px), 182px);
   }
   #mod-detail-video {
-    width: clamp(340px, 90vw, 560px);
-    height: clamp(340px, 90vw, 560px);
+    width: calc(clamp(340px, 90vw, 560px) * var(--detail-video-scale));
+    height: calc(clamp(340px, 90vw, 560px) * var(--detail-video-scale));
   }
 }
 

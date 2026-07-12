@@ -4,6 +4,7 @@ const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Safari (desktop + iOS) doesn't support WebM alpha — use HEVC .mov instead
 const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+if (IS_SAFARI) document.documentElement.classList.add('is-safari');
 
 // Bump this whenever module thumb/video assets are re-encoded so browsers
 // fetch the new bytes instead of serving a stale cached copy of the same URL.
@@ -641,6 +642,8 @@ function openOverlay(file) {
   stopActiveHoverVideo();               // release any main-page hover video first
   if (overlayRevealRaf) cancelAnimationFrame(overlayRevealRaf);
   modOverlay.classList.remove('content-ready');
+  modOverlay.classList.toggle('category-w', file.startsWith('W-'));
+  modOverlay.classList.toggle('module-w-a-2', file === 'W-A-2');
   modOverlay.setAttribute('aria-hidden', 'false');
   modOverlay.classList.add('open');
   document.body.classList.add('mod-overlay-open');
@@ -653,7 +656,18 @@ function openOverlay(file) {
     modDetailVideo.src = getDetailVideoSrc(file);
     modDetailVideo.load();
     modDetailVideo.play().catch(() => {});
-    modOverlay.classList.add('content-ready');
+    // Wait until the video actually has a frame ready to paint before fading
+    // it in, so it doesn't visibly "pop in" after the title has already
+    // finished animating. Fall back to a timeout in case canplay never fires
+    // (slow network, decode error, etc).
+    const reveal = () => {
+      modDetailVideo.removeEventListener('canplay', reveal);
+      clearTimeout(revealFallback);
+      if (!overlayOpen) return;
+      modOverlay.classList.add('content-ready');
+    };
+    const revealFallback = setTimeout(reveal, 500);
+    modDetailVideo.addEventListener('canplay', reveal);
   });
 }
 
