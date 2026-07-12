@@ -155,6 +155,15 @@ html.is-safari #mod-overlay-bg {
   z-index: 1;
   pointer-events: none; /* 오버레이 닫혀있을 때 이벤트 차단 */
 }
+/* Keep the current large-screen glow proportions, but scale the whole ellipse
+   down from whichever desktop viewport axis becomes constrained first. */
+@media (min-width: 769px) {
+  #mod-overlay-glow {
+    width: min(2762px, 134.4vw, 268.8vh);
+    height: auto;
+    aspect-ratio: 5 / 4;
+  }
+}
 #mod-overlay.open #mod-overlay-glow {
   opacity: 1;
   transform: translate(-50%, 55%) scale(0.95);
@@ -341,8 +350,8 @@ html.is-safari #mod-overlay-bg {
   user-select: none;
   -webkit-user-select: none;
 }
-#mod-nav-prev { left: clamp(48px, 8vw, 110px); }
-#mod-nav-next { right: clamp(48px, 8vw, 110px); }
+#mod-nav-prev { left: calc(clamp(48px, 8vw, 110px) + 48px); }
+#mod-nav-next { right: calc(clamp(48px, 8vw, 110px) + 48px); }
 #mod-overlay.open .mod-nav-btn {
   opacity: 1;
   pointer-events: auto;
