@@ -45,6 +45,13 @@
   object-fit: contain;
   filter: url(#eidos-color-filter) brightness(var(--mod-brightness)) contrast(var(--mod-contrast)) saturate(var(--mod-saturate));
 }
+/* Mobile browsers, especially Safari, can shift colors even when an SVG LUT
+   is configured as an identity filter. Bypass the filter entirely so mobile
+   thumbnails and hover videos use the same source colors as desktop. */
+html.is-mobile .module-thumb,
+html.is-mobile .module-video {
+  filter: none;
+}
 /* At rest only the WebP thumb shows; the video is swapped in once it is ready */
 .module-video { display: none; }
 .module.video-active .module-thumb { display: none; }
@@ -342,20 +349,30 @@ html.is-safari #mod-overlay-bg {
 }
 
 @media (max-width: 768px) {
+  #mod-overlay-content {
+    --mobile-overlay-shift: -24px;
+  }
+  #mod-detail-header {
+    top: calc(clamp(80px, 12vh, 140px) + var(--mobile-overlay-shift));
+  }
   .mod-detail-bar { width: 3px; height: 21px; }
   #mod-detail-title {
-    top: clamp(122px, calc(12vh + 42px), 182px);
+    top: calc(clamp(122px, calc(12vh + 42px), 182px) + var(--mobile-overlay-shift));
   }
   #mod-detail-video {
     width: calc(clamp(340px, 90vw, 560px) * var(--detail-video-scale));
     height: calc(clamp(340px, 90vw, 560px) * var(--detail-video-scale));
+    transform: translateY(calc(12px + var(--detail-video-y) + var(--mobile-overlay-shift))) scale(0.99);
+  }
+  #mod-overlay.content-ready #mod-detail-video {
+    transform: translateY(calc(var(--detail-video-y) + var(--mobile-overlay-shift))) scale(1);
   }
   /* Below the video, side by side, instead of straddling the viewport. */
   .mod-nav-btn {
     width: 48px;
     height: 48px;
     padding: 0;
-    top: calc(50% + clamp(170px, 45vw, 280px) + 20px);
+    top: calc(50% + clamp(170px, 45vw, 280px) + 20px + var(--mobile-overlay-shift));
     transform: none;
   }
   .mod-nav-btn img { width: 18px; height: 18px; }

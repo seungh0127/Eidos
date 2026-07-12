@@ -1,6 +1,7 @@
 // ── Device detection ──────────────────────────────────────────────────────────
 const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
                   window.matchMedia('(pointer: coarse)').matches;
+if (IS_MOBILE) document.documentElement.classList.add('is-mobile');
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Safari (desktop + iOS) doesn't support WebM alpha — use HEVC .mov instead
 const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
