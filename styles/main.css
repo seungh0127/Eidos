@@ -127,7 +127,14 @@ html.is-safari #mod-overlay-bg {
   position: absolute;
   bottom: 0;
   left: 50%;
-  transform: translate(-50%, 55%);
+  transform: translate(-50%, 55%) scale(0.45);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  /* Opacity settles quickly so the circle is already visible while it's
+     still visibly growing — fading and scaling on the same timeline made
+     the growth read as a simple fade instead of a spread. */
+  transition: opacity 0.5s ease, transform 1.1s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
   /* 화면이 작아질수록 원이 커짐: 200vw가 1500px 상한을 초과하면 1500px로 고정 */
   width: clamp(1200px, 240vw, 2300px);
   height: clamp(1000px, 200vw, 1900px);
@@ -142,6 +149,8 @@ html.is-safari #mod-overlay-bg {
   pointer-events: none; /* 오버레이 닫혀있을 때 이벤트 차단 */
 }
 #mod-overlay.open #mod-overlay-glow {
+  opacity: 1;
+  transform: translate(-50%, 55%) scale(0.95);
   pointer-events: auto; /* 오버레이 열렸을 때만 클릭으로 닫기 허용 */
 }
 
@@ -244,8 +253,11 @@ html.is-safari #mod-overlay-bg {
   padding: 0 clamp(12px, 3vw, 40px);
   box-sizing: border-box;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.58s ease 0.05s, transform 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+  transform: translateY(24px);
+  /* Opacity settles well before the transform finishes, so the title is
+     still visibly sliding up after it's already fully readable — otherwise
+     the motion reads as a plain fade instead of a rise. */
+  transition: opacity 0.4s ease 0.05s, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
   will-change: opacity, transform;
 }
 

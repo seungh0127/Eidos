@@ -103,13 +103,6 @@ const MODULES = [
   'EX-B-1','EX-C-1','EX-D-1',
 ];
 
-const MODULE_CATEGORIES = ['H', 'C', 'S', 'U', 'F', 'E', 'W', 'L', 'EX'];
-const MODULES_BY_CATEGORY = MODULES.reduce((groups, file) => {
-  const category = file.slice(0, file.indexOf('-'));
-  (groups[category] ||= []).push(file);
-  return groups;
-}, {});
-
 // ── Layout constants ──────────────────────────────────────────────────────────
 const IMG  = IS_MOBILE ? 130 : 200;
 const GAP  = IS_MOBILE ? 100 : 160;
@@ -176,13 +169,84 @@ function positiveMod(n, m) {
   return ((n % m) + m) % m;
 }
 
+// ── Module placement ──────────────────────────────────────────────────────────
+// LAYOUT_SEED is randomized once per page load, so the whole arrangement is
+// different on every refresh. Each cell picks from a session-shuffled order of
+// every module (no category grouping — this is a plain, even, fully random
+// pick), then — if that pick is already showing on a nearby cell — steps
+// forward through the same shuffled order until it finds one that isn't.
+// "Nearby" covers roughly a full screen's worth of tiles in every direction,
+// so a given module essentially never repeats within one view.
+//
+// A cell must compare against its neighbors' *final* picks, not their first
+// natural guess — a neighbor may itself have been nudged away from its own
+// natural pick, and ignoring that let two unrelated cells independently redirect
+// onto the same module. To get final values without cells circularly depending
+// on each other, every cell only ever looks at neighbors that come "earlier" in
+// a fixed (r, then c) order, and those are resolved (and memoized) recursively.
+// Later cells reciprocally avoid earlier ones once they're computed, so nearby
+// pairs end up mutually deduped regardless of which one renders first.
+// Everything is still a pure function of (c, r), so panning back to an
+// already-seen cell always shows the same module, no flicker.
+const LAYOUT_SEED = (Math.random() * 4294967296) >>> 0;
+
+const SHUFFLED_MODULES = MODULES.slice();
+(function shuffle(arr, rng) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+})(SHUFFLED_MODULES, mulberry32(LAYOUT_SEED));
+
+const DEDUPE_RADIUS = 5;      // ~11×11 neighborhood — comfortably covers one screen
+const RESOLVE_DEPTH_CAP = 25; // bounds worst-case recursion if the cache is cold
+
+function naturalModuleIndex(c, r) {
+  return hashCell(c, r, LAYOUT_SEED) % SHUFFLED_MODULES.length;
+}
+
+const resolvedModuleCache = new Map();
+
+function isEarlierCell(c1, r1, c2, r2) {
+  return r1 < r2 || (r1 === r2 && c1 < c2);
+}
+
+function resolveModuleAt(c, r, depth) {
+  const key = c + ',' + r;
+  const cached = resolvedModuleCache.get(key);
+  if (cached) return cached;
+
+  const n = SHUFFLED_MODULES.length;
+  const taken = new Set();
+  if (depth < RESOLVE_DEPTH_CAP) {
+    for (let dr = -DEDUPE_RADIUS; dr <= DEDUPE_RADIUS; dr++) {
+      for (let dc = -DEDUPE_RADIUS; dc <= DEDUPE_RADIUS; dc++) {
+        if (dc === 0 && dr === 0) continue;
+        const nc = c + dc, nr = r + dr;
+        if (!isEarlierCell(nc, nr, c, r)) continue;
+        taken.add(resolveModuleAt(nc, nr, depth + 1));
+      }
+    }
+  }
+
+  const startIdx = naturalModuleIndex(c, r);
+  let result = SHUFFLED_MODULES[startIdx];
+  for (let step = 0; step < n; step++) {
+    const candidate = SHUFFLED_MODULES[(startIdx + step) % n];
+    if (!taken.has(candidate)) { result = candidate; break; }
+  }
+
+  // Cheap to recompute (it'll just re-resolve the same earlier neighbors) so
+  // cap memory rather than let far-off panning grow this forever.
+  if (resolvedModuleCache.size >= 20000) {
+    resolvedModuleCache.delete(resolvedModuleCache.keys().next().value);
+  }
+  resolvedModuleCache.set(key, result);
+  return result;
+}
+
 function moduleAt(c, r) {
-  const categoryIndex = positiveMod(c * 3 + r * 2, MODULE_CATEGORIES.length);
-  const category = MODULE_CATEGORIES[categoryIndex];
-  const modules = MODULES_BY_CATEGORY[category] || MODULES;
-  const seed = hashCell(c, r, 1);
-  const rng = mulberry32(seed + 1);
-  return modules[Math.floor(rng() * modules.length)];
+  return resolveModuleAt(c, r, 0);
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
