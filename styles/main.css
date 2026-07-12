@@ -301,46 +301,6 @@ html.is-safari #mod-overlay-bg {
 #mod-overlay-content.over-pause-zone { cursor: grab; }
 #mod-overlay-content.grabbing { cursor: grabbing; }
 
-/* Prev/next arrows — step through modules within the same category. */
-.mod-nav-btn {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: auto;
-  height: auto;
-  border: none;
-  border-radius: 50%;
-  padding: 14px;
-  /* #1B3E6C at 30% alpha — only the background is translucent so the white
-     icon on top stays fully opaque, instead of fading the whole button. */
-  background: rgba(27, 62, 108, 0.3);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease 0.1s, background 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.mod-nav-btn:hover { background: rgba(36, 72, 124, 0.45); }
-.mod-nav-btn img {
-  width: 22px;
-  height: 22px;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-#mod-nav-prev { left: clamp(48px, 8vw, 110px); }
-#mod-nav-next { right: clamp(48px, 8vw, 110px); }
-#mod-overlay.open .mod-nav-btn {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 @media (max-width: 768px) {
   .mod-detail-bar { width: 3px; height: 21px; }
   #mod-detail-title {
@@ -350,17 +310,6 @@ html.is-safari #mod-overlay-bg {
     width: calc(clamp(340px, 90vw, 560px) * var(--detail-video-scale));
     height: calc(clamp(340px, 90vw, 560px) * var(--detail-video-scale));
   }
-  /* Below the video, side by side, instead of straddling the viewport. */
-  .mod-nav-btn {
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    top: calc(50% + clamp(170px, 45vw, 280px) + 20px);
-    transform: none;
-  }
-  .mod-nav-btn img { width: 18px; height: 18px; }
-  #mod-nav-prev { left: calc(50% - 56px); right: auto; }
-  #mod-nav-next { left: calc(50% + 8px); right: auto; }
 }
 
 /* Logo white + nav hidden when overlay is open */
