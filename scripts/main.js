@@ -511,6 +511,7 @@ let isDragging = false;
 let velX = 0, velY = 0;
 let dragStartX, dragStartY, dragCamX0, dragCamY0, prevMX, prevMY, prevT;
 let touch1 = null, touchMoved = false, prevTX, prevTY, prevTT;
+let touchActive = false;
 let pinchState = null;
 let pressTimer = null, pressedModule = null;
 
@@ -547,7 +548,7 @@ function loop(ts) {
   lastTS = ts;
 
   if (!isDragging) {
-    if (!REDUCED_MOTION && !overlayOpen && !pressedModule) {
+    if (!REDUCED_MOTION && !overlayOpen && !pressedModule && !touchActive) {
       camX += DRIFT_DX * dt / scale;
       camY += DRIFT_DY * dt / scale;
     }
@@ -954,6 +955,7 @@ if (!IS_MOBILE) {
 if (IS_MOBILE) {
   viewport.addEventListener('touchstart', e => {
     if (overlayOpen) return;
+    touchActive = true;
     if (e.touches.length === 2) {
       clearTimeout(pressTimer);
       deactivateModulePress();
@@ -969,16 +971,17 @@ if (IS_MOBILE) {
     if (e.touches.length !== 1) return;
     pinchState = null;
     const t = e.touches[0];
-    touch1 = { x: t.clientX, y: t.clientY, camX, camY };
-    touchMoved = false; isDragging = false; velX = 0; velY = 0;
-    prevTX = t.clientX; prevTY = t.clientY; prevTT = performance.now();
-    clearTimeout(pressTimer);
     const tx = t.clientX, ty = t.clientY;
+    // Resolve the tapped module once, up front — the background drift keeps
+    // moving modules under the finger, so re-querying elementFromPoint later
+    // (on touchend) can miss the module the user actually pressed.
+    const startEl = document.elementFromPoint(tx, ty)?.closest?.('.module') || null;
+    touch1 = { x: tx, y: ty, camX, camY, el: startEl };
+    touchMoved = false; isDragging = false; velX = 0; velY = 0;
+    prevTX = tx; prevTY = ty; prevTT = performance.now();
+    clearTimeout(pressTimer);
     pressTimer = setTimeout(() => {
-      if (!touchMoved) {
-        const el = document.elementFromPoint(tx, ty)?.closest?.('.module');
-        if (el) activateModulePress(el);
-      }
+      if (!touchMoved && touch1?.el) activateModulePress(touch1.el);
     }, 180);
   }, { passive: true });
 
@@ -1017,18 +1020,20 @@ if (IS_MOBILE) {
 
   viewport.addEventListener('touchend', e => {
     if (e.touches.length > 0) return;
+    touchActive = false;
     const wasMoved = touchMoved;
+    const tappedEl = touch1?.el;
     clearTimeout(pressTimer);
     deactivateModulePress();
     isDragging = false; touch1 = null; pinchState = null;
     const cap = 25;
     velX = Math.max(-cap, Math.min(cap, velX));
     velY = Math.max(-cap, Math.min(cap, velY));
-    // Tap detection: short touch, no movement, no long press
-    if (!wasMoved && !overlayOpen) {
-      const ct = e.changedTouches[0];
-      const el = document.elementFromPoint(ct.clientX, ct.clientY)?.closest?.('.module');
-      if (el) openOverlay(el.dataset.file);
+    // Tap detection: short touch, no movement, no long press.
+    // Reuse the element resolved at touchstart rather than re-querying at
+    // the release point, so drift during the tap can't shift the target.
+    if (!wasMoved && !overlayOpen && tappedEl) {
+      openOverlay(tappedEl.dataset.file);
     }
   }, { passive: true });
 }
