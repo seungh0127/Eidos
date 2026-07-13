@@ -385,8 +385,8 @@ html.is-safari #mod-overlay-bg {
     transform: none;
   }
   .mod-nav-btn img { width: 18px; height: 18px; }
-  #mod-nav-prev { left: calc(50% - 66px); right: auto; }
-  #mod-nav-next { left: calc(50% + 14px); right: auto; }
+  #mod-nav-prev { left: calc(50% - 64.5px); right: auto; }
+  #mod-nav-next { left: calc(50% + 12.5px); right: auto; }
 }
 
 /* Logo white + nav hidden when overlay is open */
