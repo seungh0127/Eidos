@@ -512,6 +512,11 @@ let velX = 0, velY = 0;
 let dragStartX, dragStartY, dragCamX0, dragCamY0, prevMX, prevMY, prevT;
 let touch1 = null, touchMoved = false, prevTX, prevTY, prevTT;
 let touchActive = false;
+// After a touch ends, keep drift paused for a bit — it only resumes once
+// the user has left the screen alone for DRIFT_RESUME_DELAY.
+const DRIFT_RESUME_DELAY = 5000;
+let mobileDriftPaused = false;
+let driftResumeTimer = null;
 let pinchState = null;
 let pressTimer = null, pressedModule = null;
 
@@ -548,7 +553,7 @@ function loop(ts) {
   lastTS = ts;
 
   if (!isDragging) {
-    if (!REDUCED_MOTION && !overlayOpen && !pressedModule && !touchActive) {
+    if (!REDUCED_MOTION && !overlayOpen && !pressedModule && !touchActive && !mobileDriftPaused) {
       camX += DRIFT_DX * dt / scale;
       camY += DRIFT_DY * dt / scale;
     }
@@ -956,6 +961,8 @@ if (IS_MOBILE) {
   viewport.addEventListener('touchstart', e => {
     if (overlayOpen) return;
     touchActive = true;
+    mobileDriftPaused = true;
+    clearTimeout(driftResumeTimer);
     if (e.touches.length === 2) {
       clearTimeout(pressTimer);
       deactivateModulePress();
@@ -1021,6 +1028,8 @@ if (IS_MOBILE) {
   viewport.addEventListener('touchend', e => {
     if (e.touches.length > 0) return;
     touchActive = false;
+    clearTimeout(driftResumeTimer);
+    driftResumeTimer = setTimeout(() => { mobileDriftPaused = false; }, DRIFT_RESUME_DELAY);
     const wasMoved = touchMoved;
     const tappedEl = touch1?.el;
     clearTimeout(pressTimer);
