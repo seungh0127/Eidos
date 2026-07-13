@@ -514,7 +514,7 @@ let touch1 = null, touchMoved = false, prevTX, prevTY, prevTT;
 let touchActive = false;
 // After a touch ends, keep drift paused for a bit — it only resumes once
 // the user has left the screen alone for DRIFT_RESUME_DELAY.
-const DRIFT_RESUME_DELAY = 5000;
+const DRIFT_RESUME_DELAY = 3000;
 let mobileDriftPaused = false;
 let driftResumeTimer = null;
 let pinchState = null;
