@@ -378,15 +378,15 @@ html.is-safari #mod-overlay-bg {
   }
   /* Below the video, side by side, instead of straddling the viewport. */
   .mod-nav-btn {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     padding: 0;
     top: calc(50% + clamp(170px, 45vw, 280px) + 20px + var(--mobile-overlay-shift));
     transform: none;
   }
   .mod-nav-btn img { width: 18px; height: 18px; }
-  #mod-nav-prev { left: calc(50% - 56px); right: auto; }
-  #mod-nav-next { left: calc(50% + 8px); right: auto; }
+  #mod-nav-prev { left: calc(50% - 63px); right: auto; }
+  #mod-nav-next { left: calc(50% + 11px); right: auto; }
 }
 
 /* Logo white + nav hidden when overlay is open */
