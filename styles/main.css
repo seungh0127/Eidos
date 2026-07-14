@@ -400,3 +400,84 @@ body.mod-overlay-open #logo-btn img { filter: brightness(0) invert(1); }
 body.mod-overlay-open #main-nav { opacity: 0; pointer-events: none; transition: opacity 0.28s ease; }
 #main-nav { transition: opacity 0.28s ease; }
 #main-nav .nav-link { color: #ffffff; }
+
+/* ── Category menu (top-right) ─────────────────────────────────────────────── */
+#menu-wrap {
+  position: fixed;
+  top: max(24px, constant(safe-area-inset-top));
+  top: max(24px, env(safe-area-inset-top, 24px));
+  right: max(24px, constant(safe-area-inset-right));
+  right: max(24px, env(safe-area-inset-right, 24px));
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  mix-blend-mode: difference;
+  transition: opacity 0.28s ease;
+}
+body.mod-overlay-open #menu-wrap { opacity: 0; pointer-events: none; }
+
+#menu-btn {
+  position: relative;
+  width: 20px;
+  height: 18px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-line {
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: #ffffff;
+  transform-origin: center;
+  transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.25s ease;
+}
+.menu-line-1 { top: 0; }
+.menu-line-2 { top: 8px; }
+.menu-line-3 { top: 16px; }
+#menu-btn.open .menu-line-1 { transform: translateY(8px) rotate(45deg); }
+#menu-btn.open .menu-line-2 { opacity: 0; }
+#menu-btn.open .menu-line-3 { transform: translateY(-8px) rotate(-45deg); }
+
+#category-menu {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+#category-menu.open {
+  max-height: 420px;
+  opacity: 1;
+  pointer-events: auto;
+}
+.category-link {
+  font-family: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.00em;
+  line-height: 1.3;
+  color: #7f7f7f;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+.category-link:hover { color: #ffffff; }
+.category-link.active { color: #ffffff; }
+@media (max-width: 768px) {
+  .category-link { font-size: 19px; }
+  #category-menu { gap: 8px; }
+}

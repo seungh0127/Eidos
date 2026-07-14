@@ -9,7 +9,7 @@ if (IS_SAFARI) document.documentElement.classList.add('is-safari');
 
 // Bump this whenever module thumb/video assets are re-encoded so browsers
 // fetch the new bytes instead of serving a stale cached copy of the same URL.
-const ASSET_VERSION = '20260714';
+const ASSET_VERSION = '20260714c';
 
 // ── Live color adjustment (tuned via /admin/) ─────────────────────────────────
 // Values are shared through localStorage so the admin page can drive this page
@@ -142,7 +142,7 @@ const MODULE_SRC = {
   'CE-R-1': [2200, 2200], 'CE-H-1': [2500, 2500], 'CE-IB-1': [2500, 2500],
   'L-A-1': [2000, 2800], 'L-A-2': [2000, 2800], 'L-A-3': [2000, 2800],
   'L-B-1': [2000, 2800], 'L-B-2': [2000, 2800],
-  'L-C-1': [2500, 2600], 'L-C-3': [2800, 2000], 'L-C-4': [2800, 2800],
+  'L-C-1': [2500, 2600], 'L-C-3': [2800, 2800], 'L-C-4': [2800, 2000],
   'L-D-1': [2400, 2400], 'L-D-2': [2600, 2600],
   'L-E-1': [3000, 2000], 'L-E-2': [3000, 2000],
   'L-F-1': [2800, 2000], 'L-F-2': [2800, 2000], 'L-F-3': [2800, 2000],
@@ -255,7 +255,38 @@ function resolveModuleAt(c, r, depth) {
   return result;
 }
 
+// ── Category filtering ────────────────────────────────────────────────────────
+// Selecting a category from the top-right menu swaps the infinite random
+// layout for a fixed grid of just that category's modules (column counts
+// match the category page mockup). currentCategory === null means "ALL".
+const CATEGORY_CONFIG = [
+  { key: 'Head',          label: 'Head',           code: 'H',  cols: 6 },
+  { key: 'Core',          label: 'Core',           code: 'C',  cols: 6 },
+  { key: 'CoreExtension', label: 'Core Extension', code: 'CE', cols: 3 },
+  { key: 'Shoulder',      label: 'Shoulder',       code: 'S',  cols: 5 },
+  { key: 'UpperArm',      label: 'Upper arm',      code: 'U',  cols: 4 },
+  { key: 'Forearm',       label: 'Forearm',        code: 'F',  cols: 5 },
+  { key: 'EndEffector',   label: 'End-effector',   code: 'E',  cols: 5 },
+  { key: 'Locomotion',    label: 'Locomotion',     code: 'L',  cols: 6 },
+  { key: 'Extension',     label: 'Extension',      code: 'EX', cols: 3 },
+];
+
+let currentCategory = null;
+let categoryFiles    = [];
+let categoryCols     = 0;
+let categoryMinScale = 0.35;   // computed per category so the whole grid fits on entry
+
+function activeMinScale() {
+  return currentCategory ? categoryMinScale : MIN_SCALE;
+}
+
+function categoryModuleAt(c, r) {
+  if (c < 0 || r < 0 || c >= categoryCols) return null;
+  return categoryFiles[r * categoryCols + c] || null;
+}
+
 function moduleAt(c, r) {
+  if (currentCategory) return categoryModuleAt(c, r);
   return resolveModuleAt(c, r, 0);
 }
 
@@ -319,6 +350,7 @@ function addModule(c, r) {
   const key = c + ',' + r;
   if (active.has(key)) return;
   const file = moduleAt(c, r);
+  if (!file) return;   // empty cell past the end of a category's finite grid
   const el   = acquireModule();
   el.dataset.file = file;
   el.style.left   = (c * CELL) + 'px';
@@ -327,6 +359,17 @@ function addModule(c, r) {
   applyModBaseScale(el, modBaseScale);
   world.appendChild(el);
   active.set(key, el);
+}
+
+// Drop every currently-rendered module immediately — used when switching
+// categories, since the grid contents at any given cell change completely.
+function clearAllModules() {
+  for (const [key, el] of active) {
+    world.removeChild(el);
+    releaseModule(el);
+  }
+  active.clear();
+  lastBounds = null;
 }
 
 function removeModule(key) {
@@ -562,7 +605,7 @@ function loop(ts) {
   lastTS = ts;
 
   if (!isDragging) {
-    if (!REDUCED_MOTION && !overlayOpen && !pressedModule && !touchActive && !mobileDriftPaused) {
+    if (!REDUCED_MOTION && !overlayOpen && !pressedModule && !touchActive && !mobileDriftPaused && !currentCategory) {
       camX += DRIFT_DX * dt / scale;
       camY += DRIFT_DY * dt / scale;
     }
@@ -967,7 +1010,7 @@ if (!IS_MOBILE) {
 // ── Desktop: drag ─────────────────────────────────────────────────────────────
 if (!IS_MOBILE) {
   viewport.addEventListener('mousedown', e => {
-    if (overlayOpen) return;
+    if (overlayOpen || currentCategory) return;   // category pages: zoom only, no pan
     isDragging = true;
     viewport.classList.add('dragging');
     dragStartX = e.clientX; dragStartY = e.clientY;
@@ -1015,7 +1058,15 @@ if (IS_MOBILE) {
       const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
       const midX = (t0.clientX + t1.clientX) / 2;
       const midY = (t0.clientY + t1.clientY) / 2;
-      pinchState = { dist0: dist, scale0: scale, wx: midX / scale + camX, wy: midY / scale + camY, midX, midY };
+      // On category pages panning is disabled, so anchor the pinch at the
+      // viewport center (not the fingers) — otherwise zooming would drift
+      // the module group off-center with no way to drag it back.
+      const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+      pinchState = {
+        dist0: dist, scale0: scale,
+        wx: midX / scale + camX, wy: midY / scale + camY, midX, midY,
+        cwx: cx / scale + camX, cwy: cy / scale + camY,
+      };
       return;
     }
     if (e.touches.length !== 1) return;
@@ -1040,13 +1091,20 @@ if (IS_MOBILE) {
     if (e.touches.length === 2 && pinchState) {
       const t0 = e.touches[0], t1 = e.touches[1];
       const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
-      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinchState.scale0 * dist / pinchState.dist0));
+      const newScale = Math.max(activeMinScale(), Math.min(MAX_SCALE, pinchState.scale0 * dist / pinchState.dist0));
       scale = newScale;
-      camX  = pinchState.wx - pinchState.midX / scale;
-      camY  = pinchState.wy - pinchState.midY / scale;
+      if (currentCategory) {
+        const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+        camX = pinchState.cwx - cx / scale;
+        camY = pinchState.cwy - cy / scale;
+      } else {
+        camX  = pinchState.wx - pinchState.midX / scale;
+        camY  = pinchState.wy - pinchState.midY / scale;
+      }
       lastBounds = null;
       return;
     }
+    if (currentCategory) return;   // category pages: pinch-zoom only, no pan
     if (!touch1 || e.touches.length !== 1) return;
     const t = e.touches[0];
     const dx = t.clientX - touch1.x, dy = t.clientY - touch1.y;
@@ -1094,12 +1152,15 @@ if (IS_MOBILE) {
 viewport.addEventListener('wheel', e => {
   if (overlayOpen) return;
   e.preventDefault();
-  const mx = e.clientX, my = e.clientY;
+  // On category pages panning is disabled, so always zoom around the
+  // viewport center instead of the cursor — the module group stays put.
+  const mx = currentCategory ? window.innerWidth  / 2 : e.clientX;
+  const my = currentCategory ? window.innerHeight / 2 : e.clientY;
   const wx = mx / scale + camX, wy = my / scale + camY;
   let delta = e.deltaY;
   if (e.deltaMode === 1) delta *= 20;
   if (e.deltaMode === 2) delta *= 300;
-  const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * Math.pow(0.998, delta)));
+  const newScale = Math.max(activeMinScale(), Math.min(MAX_SCALE, scale * Math.pow(0.998, delta)));
   if (newScale !== scale) {
     scale = newScale;
     camX  = wx - mx / scale;
@@ -1109,21 +1170,20 @@ viewport.addEventListener('wheel', e => {
 
 window.addEventListener('resize', () => { lastBounds = null; });
 
-// ── Logo: reset camera ────────────────────────────────────────────────────────
+// ── Camera animation (logo reset + category switches) ─────────────────────────
 let resetAnim = null;
 
-function resetCamera() {
+function animateCameraTo(targetX, targetY, targetScale, duration = 600) {
   if (resetAnim) cancelAnimationFrame(resetAnim);
   const startX = camX, startY = camY, startScale = scale;
   const startTime = performance.now();
-  const duration = 600;
   function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
   function step(now) {
     const t = Math.min((now - startTime) / duration, 1);
     const e = ease(t);
-    camX  = startX  + (INIT_CAM_X - startX)  * e;
-    camY  = startY  + (INIT_CAM_Y - startY)  * e;
-    scale = startScale + (INIT_SCALE - startScale) * e;
+    camX  = startX  + (targetX - startX)  * e;
+    camY  = startY  + (targetY - startY)  * e;
+    scale = startScale + (targetScale - startScale) * e;
     velX = 0; velY = 0;
     applyCamera();
     updateModules();
@@ -1133,7 +1193,98 @@ function resetCamera() {
   resetAnim = requestAnimationFrame(step);
 }
 
+function resetCamera() {
+  animateCameraTo(INIT_CAM_X, INIT_CAM_Y, INIT_SCALE);
+}
+
 logoBtn.addEventListener('click', () => {
   if (overlayOpen) closeOverlay();
   else resetCamera();
+});
+
+// ── Category menu (top-right) ──────────────────────────────────────────────────
+const menuBtn      = document.getElementById('menu-btn');
+const categoryMenu = document.getElementById('category-menu');
+
+function closeCategoryMenu() {
+  menuBtn.classList.remove('open');
+  categoryMenu.classList.remove('open');
+  menuBtn.setAttribute('aria-expanded', 'false');
+}
+
+function toggleCategoryMenu() {
+  const nowOpen = !menuBtn.classList.contains('open');
+  menuBtn.classList.toggle('open', nowOpen);
+  categoryMenu.classList.toggle('open', nowOpen);
+  menuBtn.setAttribute('aria-expanded', String(nowOpen));
+}
+
+menuBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  toggleCategoryMenu();
+});
+
+document.addEventListener('click', e => {
+  if (!menuBtn.classList.contains('open')) return;
+  if (e.target.closest('#menu-wrap')) return;
+  closeCategoryMenu();
+});
+
+function updateCategoryMenuUI() {
+  const activeKey = currentCategory || 'ALL';
+  categoryMenu.querySelectorAll('.category-link').forEach(a => {
+    a.classList.toggle('active', a.dataset.category === activeKey);
+  });
+}
+
+// Fit the whole category grid on screen — that becomes both the camera's
+// starting position and the zoomed-out limit (activeMinScale), so the user
+// can zoom in from there but never zoom out past seeing every module.
+function cameraTargetForCategory(cfg) {
+  const rows = Math.ceil(categoryFiles.length / cfg.cols);
+  const gridW = cfg.cols * CELL;
+  const gridH = rows * CELL;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const padX = IS_MOBILE ? 24 : 50;
+  const padY = IS_MOBILE ? 90 : 110;
+  const fitScale = Math.min((vw - padX * 2) / gridW, (vh - padY * 2) / gridH);
+  // No lower floor here — larger categories legitimately need to zoom out
+  // further than the ALL page's default MIN_SCALE to show every module.
+  const s = Math.min(MAX_SCALE, fitScale);
+  return {
+    x: gridW / 2 - vw / (2 * s),
+    y: gridH / 2 - vh / (2 * s),
+    s,
+  };
+}
+
+function setCategory(key) {
+  const nextCategory = key === 'ALL' ? null : key;
+  if (nextCategory === currentCategory) return;
+  if (overlayOpen) closeOverlay();
+  stopActiveHoverVideo();
+  currentCategory = nextCategory;
+  if (currentCategory) {
+    const cfg = CATEGORY_CONFIG.find(c => c.key === currentCategory);
+    categoryFiles = MODULES.filter(f => f.slice(0, f.indexOf('-')) === cfg.code);
+    categoryCols  = cfg.cols;
+    clearAllModules();
+    const target = cameraTargetForCategory(cfg);
+    categoryMinScale = target.s;
+    animateCameraTo(target.x, target.y, target.s);
+  } else {
+    categoryFiles = [];
+    categoryCols  = 0;
+    clearAllModules();
+    animateCameraTo(INIT_CAM_X, INIT_CAM_Y, INIT_SCALE);
+  }
+  updateCategoryMenuUI();
+}
+
+categoryMenu.addEventListener('click', e => {
+  const link = e.target.closest('.category-link');
+  if (!link) return;
+  e.preventDefault();
+  setCategory(link.dataset.category);
+  closeCategoryMenu();
 });
