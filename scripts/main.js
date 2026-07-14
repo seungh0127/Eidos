@@ -1010,7 +1010,7 @@ if (!IS_MOBILE) {
 // ── Desktop: drag ─────────────────────────────────────────────────────────────
 if (!IS_MOBILE) {
   viewport.addEventListener('mousedown', e => {
-    if (overlayOpen || currentCategory) return;   // category pages: zoom only, no pan
+    if (overlayOpen) return;
     isDragging = true;
     viewport.classList.add('dragging');
     dragStartX = e.clientX; dragStartY = e.clientY;
@@ -1058,15 +1058,7 @@ if (IS_MOBILE) {
       const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
       const midX = (t0.clientX + t1.clientX) / 2;
       const midY = (t0.clientY + t1.clientY) / 2;
-      // On category pages panning is disabled, so anchor the pinch at the
-      // viewport center (not the fingers) — otherwise zooming would drift
-      // the module group off-center with no way to drag it back.
-      const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-      pinchState = {
-        dist0: dist, scale0: scale,
-        wx: midX / scale + camX, wy: midY / scale + camY, midX, midY,
-        cwx: cx / scale + camX, cwy: cy / scale + camY,
-      };
+      pinchState = { dist0: dist, scale0: scale, wx: midX / scale + camX, wy: midY / scale + camY, midX, midY };
       return;
     }
     if (e.touches.length !== 1) return;
@@ -1093,18 +1085,11 @@ if (IS_MOBILE) {
       const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
       const newScale = Math.max(activeMinScale(), Math.min(MAX_SCALE, pinchState.scale0 * dist / pinchState.dist0));
       scale = newScale;
-      if (currentCategory) {
-        const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-        camX = pinchState.cwx - cx / scale;
-        camY = pinchState.cwy - cy / scale;
-      } else {
-        camX  = pinchState.wx - pinchState.midX / scale;
-        camY  = pinchState.wy - pinchState.midY / scale;
-      }
+      camX  = pinchState.wx - pinchState.midX / scale;
+      camY  = pinchState.wy - pinchState.midY / scale;
       lastBounds = null;
       return;
     }
-    if (currentCategory) return;   // category pages: pinch-zoom only, no pan
     if (!touch1 || e.touches.length !== 1) return;
     const t = e.touches[0];
     const dx = t.clientX - touch1.x, dy = t.clientY - touch1.y;
@@ -1152,10 +1137,7 @@ if (IS_MOBILE) {
 viewport.addEventListener('wheel', e => {
   if (overlayOpen) return;
   e.preventDefault();
-  // On category pages panning is disabled, so always zoom around the
-  // viewport center instead of the cursor — the module group stays put.
-  const mx = currentCategory ? window.innerWidth  / 2 : e.clientX;
-  const my = currentCategory ? window.innerHeight / 2 : e.clientY;
+  const mx = e.clientX, my = e.clientY;
   const wx = mx / scale + camX, wy = my / scale + camY;
   let delta = e.deltaY;
   if (e.deltaMode === 1) delta *= 20;
@@ -1242,18 +1224,22 @@ function updateCategoryMenuUI() {
 // can zoom in from there but never zoom out past seeing every module.
 function cameraTargetForCategory(cfg) {
   const rows = Math.ceil(categoryFiles.length / cfg.cols);
-  const gridW = cfg.cols * CELL;
-  const gridH = rows * CELL;
+  // A cell is IMG wide with GAP trailing empty space to the next cell, so the
+  // grid's actual visual extent is one GAP narrower/shorter than cols*CELL —
+  // centering on the full cols*CELL span (including that dangling gap) was
+  // shifting the module group left/up of true center.
+  const trueW = (cfg.cols - 1) * CELL + IMG;
+  const trueH = (rows - 1) * CELL + IMG;
   const vw = window.innerWidth, vh = window.innerHeight;
   const padX = IS_MOBILE ? 24 : 50;
   const padY = IS_MOBILE ? 90 : 110;
-  const fitScale = Math.min((vw - padX * 2) / gridW, (vh - padY * 2) / gridH);
+  const fitScale = Math.min((vw - padX * 2) / trueW, (vh - padY * 2) / trueH);
   // No lower floor here — larger categories legitimately need to zoom out
   // further than the ALL page's default MIN_SCALE to show every module.
   const s = Math.min(MAX_SCALE, fitScale);
   return {
-    x: gridW / 2 - vw / (2 * s),
-    y: gridH / 2 - vh / (2 * s),
+    x: trueW / 2 - vw / (2 * s),
+    y: trueH / 2 - vh / (2 * s),
     s,
   };
 }
