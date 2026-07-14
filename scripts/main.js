@@ -1181,7 +1181,9 @@ function resetCamera() {
 
 logoBtn.addEventListener('click', () => {
   if (overlayOpen) closeOverlay();
+  else if (currentCategory) setCategory('ALL');
   else resetCamera();
+  closeCategoryMenu();
 });
 
 // ── Category menu (top-right) ──────────────────────────────────────────────────
