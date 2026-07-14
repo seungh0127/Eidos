@@ -268,6 +268,7 @@ html.is-safari #mod-overlay-bg {
   margin-inline: auto;
   padding: 0 clamp(12px, 3vw, 40px);
   box-sizing: border-box;
+  cursor: pointer;
   opacity: 0;
   transform: translateY(24px);
   /* Opacity settles well before the transform finishes, so the title is
@@ -313,6 +314,10 @@ html.is-safari #mod-overlay-bg {
 #mod-overlay.module-ce-h-1 #mod-detail-video {
   --detail-video-y: 28px;
 }
+/* Title and video visually overlap in the center of the screen — clicking
+   either brings it above the other (see the click handlers in main.js). */
+#mod-overlay-content.detail-title-front #mod-detail-title { z-index: 10; }
+#mod-overlay-content.detail-title-front #mod-detail-video { z-index: 3; }
 /* Cursor over the overlay video pause zone (inner 70%) */
 #mod-overlay-content.over-pause-zone { cursor: grab; }
 #mod-overlay-content.grabbing { cursor: grabbing; }

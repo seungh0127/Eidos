@@ -743,6 +743,7 @@ function openOverlay(file) {
   stopActiveHoverVideo();               // release any main-page hover video first
   if (overlayRevealRaf) cancelAnimationFrame(overlayRevealRaf);
   modOverlay.classList.remove('content-ready');
+  modOverlayContent.classList.remove('detail-title-front');
   modOverlay.classList.toggle('category-ce', file.startsWith('CE-'));
   modOverlay.classList.toggle('module-ce-h-1', file === 'CE-H-1');
   modOverlay.setAttribute('aria-hidden', 'false');
@@ -781,7 +782,7 @@ function closeOverlay() {
   modOverlay.classList.remove('open');
   modOverlay.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('mod-overlay-open');
-  modOverlayContent.classList.remove('over-pause-zone', 'grabbing');
+  modOverlayContent.classList.remove('over-pause-zone', 'grabbing', 'detail-title-front');
   overlayOpen = false;
   setTimeout(() => {
     modDetailVideo.pause();
@@ -830,11 +831,26 @@ function isOverDetailVideo(e) {
   return x >= cx - hw && x <= cx + hw && y >= cy - hh && y <= cy + hh;
 }
 
-// Click the backdrop (anywhere but the module video) to close.
+// Click the backdrop (anywhere but the module video) to close. Clicking
+// directly on the video area instead brings it back above the title text
+// (see the title click handler below, which does the reverse).
 modOverlay.addEventListener('click', e => {
-  if (overlayOpen && !isOverDetailVideo(e)) closeOverlay();
+  if (!overlayOpen) return;
+  if (isOverDetailVideo(e)) {
+    modOverlayContent.classList.remove('detail-title-front');
+  } else {
+    closeOverlay();
+  }
 });
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && overlayOpen) closeOverlay(); });
+
+// Click the title text to bring it above the module artwork (it starts out
+// behind the video, since they visually overlap in the middle of the screen).
+modDetailTitle.addEventListener('click', e => {
+  if (!overlayOpen) return;
+  e.stopPropagation();
+  modOverlayContent.classList.add('detail-title-front');
+});
 
 // ── Overlay video: pause while pressing the video (PC + mobile) ───────────────
 if (!IS_MOBILE) {
