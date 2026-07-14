@@ -9,7 +9,7 @@ if (IS_SAFARI) document.documentElement.classList.add('is-safari');
 
 // Bump this whenever module thumb/video assets are re-encoded so browsers
 // fetch the new bytes instead of serving a stale cached copy of the same URL.
-const ASSET_VERSION = '20260713';
+const ASSET_VERSION = '20260714';
 
 // ── Live color adjustment (tuned via /admin/) ─────────────────────────────────
 // Values are shared through localStorage so the admin page can drive this page
@@ -93,15 +93,15 @@ const MODULES = [
   'E-C-1','E-C-2',
   'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
   'CE-R-1','CE-H-1','CE-IB-1',
-  'L-A-2','L-A-3',
-  'L-B-1','L-B-2','L-B-3',
-  'L-C-1','L-C-2','L-C-3','L-C-4',
-  'L-D-1','L-D-2','L-D-3',
+  'L-A-1','L-A-2','L-A-3',
+  'L-B-1','L-B-2',
+  'L-C-1','L-C-3','L-C-4',
+  'L-D-1','L-D-2',
   'L-E-1','L-E-2',
   'L-F-1','L-F-2','L-F-3',
   'L-G-1',
   'EX-A-0','EX-A-1','EX-A-2',
-  'EX-B-1','EX-C-1','EX-D-1',
+  'EX-C-1','EX-D-1',
 ];
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -140,6 +140,15 @@ const MODULE_SRC = {
   'E-D-1': [2800, 2600], 'E-D-2': [2600, 2600], 'E-D-3': [2600, 2600],
   'E-D-4': [2600, 2600], 'E-D-5': [2600, 2600], 'E-D-6': [2800, 2600],
   'CE-R-1': [2200, 2200], 'CE-H-1': [2500, 2500], 'CE-IB-1': [2500, 2500],
+  'L-A-1': [2000, 2800], 'L-A-2': [2000, 2800], 'L-A-3': [2000, 2800],
+  'L-B-1': [2000, 2800], 'L-B-2': [2000, 2800],
+  'L-C-1': [2500, 2600], 'L-C-3': [2800, 2000], 'L-C-4': [2800, 2800],
+  'L-D-1': [2400, 2400], 'L-D-2': [2600, 2600],
+  'L-E-1': [3000, 2000], 'L-E-2': [3000, 2000],
+  'L-F-1': [2800, 2000], 'L-F-2': [2800, 2000], 'L-F-3': [2800, 2000],
+  'L-G-1': [2000, 2400],
+  'EX-A-0': [2500, 2000], 'EX-A-1': [2500, 2000], 'EX-A-2': [2500, 2000],
+  'EX-C-1': [2500, 2000], 'EX-D-1': [2500, 2400],
 };
 const SRC_BASE = 2000;
 
@@ -610,14 +619,14 @@ const MODULE_NAMES = {
   'E-D-1':'Task End-Effector Base','E-D-2':'Cleaning Brush / Wiper Tool','E-D-3':'Spray / Nozzle Tool','E-D-4':'Powered Driver Tool','E-D-5':'Rescue Cutter / Pull Tool','E-D-6':'Tray Support End',
   'CE-R-1':'Rotation Extension','CE-H-1':'Hitch Extension','CE-IB-1':'Integrated Balancer Extension',
   'L-A-1':'Standard Biped Legs','L-A-2':'Stabilized Work Biped','L-A-3':'Compact Biped Legs',
-  'L-B-1':'Foot-Wheel Biped','L-B-2':'Roller-Knee Biped','L-B-3':'Compact Quadruped',
-  'L-C-1':'Compact Quadruped','L-C-2':'Compact Quadruped','L-C-3':'Heavy Quadruped Carrier','L-C-4':'Caterpillar Quadruped',
-  'L-D-1':'Wheel Base','L-D-2':'Omni Wheel Base','L-D-3':'Stable Four Wheel Base',
+  'L-B-1':'Foot-Wheel Biped','L-B-2':'Roller-Knee Biped',
+  'L-C-1':'Compact Quadruped','L-C-3':'Heavy Quadruped Carrier','L-C-4':'Caterpillar Quadruped',
+  'L-D-1':'Wheel Base','L-D-2':'Omni Wheel Base',
   'L-E-1':'Compact Track Base','L-E-2':'Articulated Crawler Base',
   'L-F-1':'Flat Cargo Platform','L-F-2':'Ski / Sled Runner Base','L-F-3':'Tow Trailer Platform',
   'L-G-1':'Monowheel Speedster',
   'EX-A-0':'Power Extension Base','EX-A-1':'Utility Cargo Trailer','EX-A-2':'Secure Delivery Trailer',
-  'EX-B-1':'Battery Extension Pack','EX-C-1':'Tool Rack Trailer','EX-D-1':'Stargazer Trailer'
+  'EX-C-1':'Tool Rack Trailer','EX-D-1':'Stargazer Trailer'
 };
 
 // ── Module Detail Overlay ─────────────────────────────────────────────────────
@@ -655,6 +664,15 @@ const HQ_MODULES = new Set([
   'E-C-1','E-C-2',
   'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
   'CE-R-1','CE-H-1','CE-IB-1',
+  'L-A-1','L-A-2','L-A-3',
+  'L-B-1','L-B-2',
+  'L-C-1','L-C-3','L-C-4',
+  'L-D-1','L-D-2',
+  'L-E-1','L-E-2',
+  'L-F-1','L-F-2','L-F-3',
+  'L-G-1',
+  'EX-A-0','EX-A-1','EX-A-2',
+  'EX-C-1','EX-D-1',
 ]);
 
 // Modules with MP4 hover clips and MOV overlay fallbacks.
@@ -689,6 +707,15 @@ const HEVC_MODULES = new Set([
   'E-C-1','E-C-2',
   'E-D-1','E-D-2','E-D-3','E-D-4','E-D-5','E-D-6',
   'CE-R-1','CE-H-1','CE-IB-1',
+  'L-A-1','L-A-2','L-A-3',
+  'L-B-1','L-B-2',
+  'L-C-1','L-C-3','L-C-4',
+  'L-D-1','L-D-2',
+  'L-E-1','L-E-2',
+  'L-F-1','L-F-2','L-F-3',
+  'L-G-1',
+  'EX-A-0','EX-A-1','EX-A-2',
+  'EX-C-1','EX-D-1',
 ]);
 
 function getHoverVideoSrc(file) {
