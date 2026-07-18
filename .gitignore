@@ -2,6 +2,7 @@
 
 # Raw qtrle/argb master sources — never commit (multi-GB)
 assets/modules/
+possibilities/assets/*.mov
 
 # Local conversion scratch files
 work/

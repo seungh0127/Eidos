@@ -1,12 +1,31 @@
 // ── Possibilities Carousel ────────────────────────────────────────────────────
 (function () {
-  const IMGS      = 9;
+  const IMGS      = 18;
   const SPEED_PC  = 80;
   const SPEED_MOB = 50;
+  const DRAG_RESUME_DELAY       = 1000;
+  const DEACTIVATE_RESUME_DELAY = 3000;
+
+  // Safari (desktop + iOS) doesn't support WebM alpha — use HEVC .mov instead.
+  const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
   const carousel = document.getElementById('poss-carousel');
   const track    = document.getElementById('poss-track');
   if (!carousel || !track) return;
+
+  // Each robot's video: assign the per-browser source and force a frame to
+  // paint while paused (preload="metadata" alone often leaves the canvas
+  // blank until a frame is actually decoded).
+  track.querySelectorAll('.poss-video').forEach(video => {
+    const n = video.closest('.poss-item').dataset.n;
+    const ext = IS_SAFARI ? 'mov' : 'webm';
+    video.src = `assets/hq/${n}.${ext}`;
+    video.addEventListener('loadedmetadata', () => {
+      if (video.currentTime === 0) {
+        try { video.currentTime = 0.01; } catch {}
+      }
+    }, { once: true });
+  });
 
   let itemW     = 0;
   let totalW    = 0;
@@ -22,6 +41,9 @@
   let resumeTimer     = null;
   let pointerDownX    = 0;
   let pointerHeld     = false;
+
+  let activeEl    = null;
+  let activeVideo = null;
 
   function isMobile() { return window.innerWidth <= 768; }
 
@@ -39,7 +61,14 @@
 
   function easeInOut(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
 
+  // Bumping animToken cancels any in-flight animateTo — otherwise a click
+  // that deactivates mid-centering-animation would leave the old animation's
+  // rAF loop running, visibly nudging the belt for the rest of its duration
+  // even though playback already stopped.
+  let animToken = 0;
+
   function animateTo(target, duration, onDone) {
+    const myToken = ++animToken;
     animating = true;
     paused    = true;
     const startOffset = offsetX;
@@ -49,6 +78,7 @@
     const endOffset = startOffset + diff;
 
     function step(ts) {
+      if (myToken !== animToken) return;
       const t = Math.min((ts - startTime) / duration, 1);
       offsetX = startOffset + diff * easeInOut(t);
       if (t < 1) {
@@ -77,19 +107,49 @@
   }
   requestAnimationFrame(render);
 
-  function scheduleResume() {
+  function scheduleResume(delay) {
     clearTimeout(resumeTimer);
-    resumeTimer = setTimeout(() => { paused = false; }, 1000);
+    resumeTimer = setTimeout(() => { paused = false; }, delay);
   }
 
-  function onItemClick(idx) {
+  // ── Active robot: centers, plays looping with sound; siblings dim to 30% ──
+  function deactivate() {
+    animToken++;      // cancel any in-flight centering animation
+    animating = false;
+    if (activeEl) {
+      activeVideo.pause();
+      try { activeVideo.currentTime = 0; } catch {}
+      activeVideo.muted = true;
+      activeEl.classList.remove('active');
+      track.classList.remove('has-active');
+      activeEl    = null;
+      activeVideo = null;
+    }
+    scheduleResume(DEACTIVATE_RESUME_DELAY);
+  }
+
+  function activate(domIdx, el) {
+    const video = el.querySelector('.poss-video');
+    if (!video) return;
+    clearTimeout(resumeTimer);
+    if (activeEl && activeEl !== el) {
+      activeVideo.pause();
+      try { activeVideo.currentTime = 0; } catch {}
+      activeVideo.muted = true;
+      activeEl.classList.remove('active');
+    }
+    activeEl    = el;
+    activeVideo = video;
+    el.classList.add('active');
+    track.classList.add('has-active');
+    // Unmute + play synchronously within the click handler's call stack, so
+    // browsers treat this as a user gesture and allow audio playback.
+    video.muted = false;
+    video.play().catch(() => {});
+
     const center = window.innerWidth / 2 - itemW / 2;
-    const pos0 = idx * itemW - center;
-    const pos1 = (idx + IMGS) * itemW - center;
-    const d0 = Math.abs(((pos0 - offsetX + totalW) % totalW));
-    const d1 = Math.abs(((pos1 - offsetX + totalW) % totalW));
-    const target = d0 <= d1 ? pos0 : pos1;
-    animateTo(((target % totalW) + totalW) % totalW, 900, scheduleResume);
+    const target = domIdx * itemW - center;
+    animateTo(((target % totalW) + totalW) % totalW, 900);
   }
 
   function onPointerDown(e) {
@@ -120,12 +180,20 @@
     pointerHeld = false;
     carousel.classList.remove('dragging');
     if (!dragMoved) {
-      const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-      const trackX  = clientX + offsetX;
-      const idx     = Math.floor(trackX / itemW) % IMGS;
-      onItemClick(idx);
+      const clientX  = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+      const trackX   = clientX + offsetX;
+      const domCount = track.children.length;
+      const domIdx   = ((Math.floor(trackX / itemW) % domCount) + domCount) % domCount;
+      const el       = track.children[domIdx];
+      if (el !== activeEl) {
+        // Clicking the active robot itself is a no-op (stays playing).
+        // Clicking anywhere else stops it; clicking a robot while none is
+        // active picks that one.
+        if (activeEl) deactivate();
+        else activate(domIdx, el);
+      }
     } else {
-      scheduleResume();
+      scheduleResume(DRAG_RESUME_DELAY);
     }
     dragMoved = false;
   }

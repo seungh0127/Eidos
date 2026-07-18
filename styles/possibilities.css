@@ -34,10 +34,11 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 0;
+  /* Reserve space so robots sit above the logo instead of covering it. */
+  padding-bottom: max(130px, 16vh);
 }
 
-.poss-item img {
+.poss-item video {
   display: block;
   width: 100%;
   height: 100%;
@@ -47,8 +48,17 @@
   -webkit-user-drag: none;
 }
 
+/* Siblings dim while one robot is active/playing */
+.poss-item {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+#poss-track.has-active .poss-item:not(.active) {
+  opacity: 0.3;
+}
+
 @media (max-width: 768px) {
   .poss-item {
-    padding-bottom: max(3rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
+    padding-bottom: max(150px, calc(18vh + env(safe-area-inset-bottom, 0px)));
   }
 }
