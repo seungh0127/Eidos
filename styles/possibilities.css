@@ -18,6 +18,10 @@
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  /* Stop the browser from treating any touch here as a page scroll/pan
+     gesture — otherwise mobile Safari/Chrome can pop the toolbar back in
+     while a robot is playing, even though the page itself never scrolls. */
+  touch-action: none;
 }
 #poss-carousel.dragging { cursor: grabbing; }
 

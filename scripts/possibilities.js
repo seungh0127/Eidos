@@ -198,6 +198,7 @@
 
   function onPointerMove(e) {
     if (!pointerHeld) return;
+    if (e.touches) e.preventDefault();   // stop the page from scrolling under the drag
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const delta = dragStartX - clientX;
     if (!dragMoved && Math.abs(clientX - pointerDownX) > 5) dragMoved = true;
@@ -252,7 +253,7 @@
   carousel.addEventListener('mousedown',  onPointerDown, { passive: false });
   carousel.addEventListener('touchstart', onPointerDown, { passive: false });
   window.addEventListener('mousemove',  onPointerMove);
-  window.addEventListener('touchmove',  onPointerMove, { passive: true });
+  window.addEventListener('touchmove',  onPointerMove, { passive: false });
   window.addEventListener('mouseup',    onPointerUp);
   window.addEventListener('touchend',   onPointerUp);
 })();
