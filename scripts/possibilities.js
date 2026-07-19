@@ -5,6 +5,7 @@
   const SPEED_MOB = 50;
   const DRAG_RESUME_DELAY       = 1000;
   const DEACTIVATE_RESUME_DELAY = 3000;
+  const LOOP_LIMIT              = 2;   // auto-advance after this many plays
 
   // Safari (desktop + iOS) doesn't support WebM alpha — use HEVC .mov instead.
   const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -41,6 +42,10 @@
         try { video.currentTime = 0.01; } catch {}
       }
     }, { once: true });
+    // Looping is driven manually (see onVideoEnded) so playback counts can
+    // be tracked and the carousel can auto-advance after LOOP_LIMIT plays.
+    video.loop = false;
+    video.addEventListener('ended', onVideoEnded);
   });
 
   let itemW     = 0;
@@ -58,8 +63,9 @@
   let pointerDownX    = 0;
   let pointerHeld     = false;
 
-  let activeEl    = null;
-  let activeVideo = null;
+  let activeEl        = null;
+  let activeVideo     = null;
+  let activeLoopCount = 0;
 
   function isMobile() { return window.innerWidth <= 768; }
 
@@ -168,8 +174,9 @@
     // paused-thumbnail trick in the setup loop above nudges currentTime to
     // 0.01, so without this reset the very first play could visibly skip in.
     try { video.currentTime = 0; } catch {}
-    activeEl    = el;
-    activeVideo = video;
+    activeEl        = el;
+    activeVideo     = video;
+    activeLoopCount = 0;
     el.classList.add('active');
     track.classList.add('has-active');
     // Unmute + play synchronously within the click handler's call stack, so
@@ -180,6 +187,28 @@
     const center = window.innerWidth / 2 - itemW / 2;
     const target = domIdx * itemW - center;
     animateTo(((target % totalW) + totalW) % totalW, 500);
+  }
+
+  // After the active robot has played through LOOP_LIMIT times, move on to
+  // the next one in sequence instead of looping forever.
+  function onVideoEnded(e) {
+    const video = e.target;
+    if (video !== activeVideo) return;   // stale listener from a non-active video
+    activeLoopCount++;
+    if (activeLoopCount < LOOP_LIMIT) {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    } else {
+      advanceToNext();
+    }
+  }
+
+  function advanceToNext() {
+    if (!activeEl) return;
+    const items   = track.children;
+    const idx     = Array.prototype.indexOf.call(items, activeEl);
+    const nextIdx = (idx + 1) % items.length;
+    activate(nextIdx, items[nextIdx]);
   }
 
   function onPointerDown(e) {
