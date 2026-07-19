@@ -41,9 +41,9 @@
 .poss-item video {
   display: block;
   /* Actual size is set inline by possibilities.js, proportional to each
-     robot's native canvas — these are just a fallback/clamp. */
-  max-width: 100%;
-  max-height: 100%;
+     robot's native canvas. Not clamped to the slot's own width/height —
+     the largest robots are intentionally sized past their slot so item
+     spacing can stay tight without shrinking them (see updateDimensions). */
   object-fit: contain;
   object-position: center bottom;
   pointer-events: none;

@@ -23,7 +23,7 @@
   // Largest native long edge across all 18 — the robot(s) at this size render
   // at REF_FRACTION of the slot; everyone else scales down proportionally.
   const SRC_BASE      = Math.max(...Object.values(VIDEO_DIMS).map(([w, h]) => Math.max(w, h)));
-  const REF_FRACTION  = 0.9;
+  const REF_FRACTION  = 1.1;
 
   const carousel = document.getElementById('poss-carousel');
   const track    = document.getElementById('poss-track');
@@ -64,11 +64,14 @@
   function isMobile() { return window.innerWidth <= 768; }
 
   function updateDimensions() {
-    const divisor = isMobile() ? 1.2 : 3.2;
+    const divisor    = isMobile() ? 1.15 : 3.3;
+    const refDivisor = isMobile() ? 1.0  : 2.7;
     speed  = isMobile() ? SPEED_MOB : SPEED_PC;
     itemW  = window.innerWidth / divisor;
     totalW = itemW * IMGS;
-    const refPx = itemW * REF_FRACTION;
+    // Robot size is tied to refDivisor, not the item slot width — so slot
+    // spacing (divisor) can be tightened without shrinking the robots.
+    const refPx = (window.innerWidth / refDivisor) * REF_FRACTION;
     document.querySelectorAll('.poss-item').forEach(el => {
       el.style.width = itemW + 'px';
       const dims = VIDEO_DIMS[el.dataset.n];
