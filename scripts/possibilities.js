@@ -9,6 +9,22 @@
   // Safari (desktop + iOS) doesn't support WebM alpha — use HEVC .mov instead.
   const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+  // Native canvas size of each source video (from ffprobe) — the robots were
+  // deliberately rendered at different relative scales, so these ratios are
+  // used to size each one on screen instead of uniformly filling its slot.
+  const VIDEO_DIMS = {
+    1:  [1200, 1700], 2:  [1200, 1700], 3:  [1500, 1600],
+    4:  [1500, 2100], 5:  [2000, 2100], 6:  [1500, 1800],
+    7:  [1500, 1200], 8:  [1600, 2000], 9:  [1300, 1800],
+    10: [2200, 1700], 11: [1200, 1700], 12: [1900, 1600],
+    13: [2000, 1800], 14: [2100, 1500], 15: [1800, 2100],
+    16: [1800, 1800], 17: [1200, 1800], 18: [1500, 1700],
+  };
+  // Largest native long edge across all 18 — the robot(s) at this size render
+  // at REF_FRACTION of the slot; everyone else scales down proportionally.
+  const SRC_BASE      = Math.max(...Object.values(VIDEO_DIMS).map(([w, h]) => Math.max(w, h)));
+  const REF_FRACTION  = 0.9;
+
   const carousel = document.getElementById('poss-carousel');
   const track    = document.getElementById('poss-track');
   if (!carousel || !track) return;
@@ -52,8 +68,15 @@
     speed  = isMobile() ? SPEED_MOB : SPEED_PC;
     itemW  = window.innerWidth / divisor;
     totalW = itemW * IMGS;
+    const refPx = itemW * REF_FRACTION;
     document.querySelectorAll('.poss-item').forEach(el => {
       el.style.width = itemW + 'px';
+      const dims = VIDEO_DIMS[el.dataset.n];
+      const video = el.querySelector('.poss-video');
+      if (dims && video) {
+        video.style.width  = Math.round(refPx * dims[0] / SRC_BASE) + 'px';
+        video.style.height = Math.round(refPx * dims[1] / SRC_BASE) + 'px';
+      }
     });
   }
   updateDimensions();
