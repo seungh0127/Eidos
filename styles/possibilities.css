@@ -53,7 +53,7 @@
 /* Siblings dim while one robot is active/playing */
 .poss-item {
   opacity: 1;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.25s ease;
 }
 #poss-track.has-active .poss-item:not(.active) {
   opacity: 0.3;

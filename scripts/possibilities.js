@@ -164,6 +164,10 @@
       activeVideo.muted = true;
       activeEl.classList.remove('active');
     }
+    // Always start from frame 0, even the very first activation — the
+    // paused-thumbnail trick in the setup loop above nudges currentTime to
+    // 0.01, so without this reset the very first play could visibly skip in.
+    try { video.currentTime = 0; } catch {}
     activeEl    = el;
     activeVideo = video;
     el.classList.add('active');
@@ -175,7 +179,7 @@
 
     const center = window.innerWidth / 2 - itemW / 2;
     const target = domIdx * itemW - center;
-    animateTo(((target % totalW) + totalW) % totalW, 900);
+    animateTo(((target % totalW) + totalW) % totalW, 500);
   }
 
   function onPointerDown(e) {
@@ -202,23 +206,42 @@
     }
   }
 
+  // Slots tile the whole carousel edge-to-edge, but each robot's actual
+  // video content is smaller than its slot (empty margin above it, and
+  // around it for non-square robots) — so "background" only makes sense as
+  // "outside every robot's own rendered bounds," not "outside every slot."
+  function findRobotAt(clientX, clientY) {
+    const items = track.children;
+    for (let i = 0; i < items.length; i++) {
+      const video = items[i].querySelector('.poss-video');
+      if (!video) continue;
+      const r = video.getBoundingClientRect();
+      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+        return { el: items[i], domIdx: i };
+      }
+    }
+    return null;
+  }
+
   function onPointerUp(e) {
     pointerHeld = false;
     carousel.classList.remove('dragging');
     if (!dragMoved) {
-      const clientX  = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-      const trackX   = clientX + offsetX;
-      const domCount = track.children.length;
-      const domIdx   = ((Math.floor(trackX / itemW) % domCount) + domCount) % domCount;
-      const el       = track.children[domIdx];
-      if (el === activeEl) {
+      const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+      const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+      const hit = findRobotAt(clientX, clientY);
+      if (!hit) {
+        // Clicked the background — return to the default (no robot
+        // selected) state.
+        deactivate();
+      } else if (hit.el === activeEl) {
         // Clicking the already-active robot again stops it.
         deactivate();
       } else {
         // Clicking any other robot (whether or not one is already active)
         // switches straight to it — activate() itself stops whatever was
         // previously playing before starting the new one.
-        activate(domIdx, el);
+        activate(hit.domIdx, hit.el);
       }
     } else {
       scheduleResume(DRAG_RESUME_DELAY);
