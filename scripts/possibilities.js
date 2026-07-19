@@ -211,12 +211,14 @@
       const domCount = track.children.length;
       const domIdx   = ((Math.floor(trackX / itemW) % domCount) + domCount) % domCount;
       const el       = track.children[domIdx];
-      if (el !== activeEl) {
-        // Clicking the active robot itself is a no-op (stays playing).
-        // Clicking anywhere else stops it; clicking a robot while none is
-        // active picks that one.
-        if (activeEl) deactivate();
-        else activate(domIdx, el);
+      if (el === activeEl) {
+        // Clicking the already-active robot again stops it.
+        deactivate();
+      } else {
+        // Clicking any other robot (whether or not one is already active)
+        // switches straight to it — activate() itself stops whatever was
+        // previously playing before starting the new one.
+        activate(domIdx, el);
       }
     } else {
       scheduleResume(DRAG_RESUME_DELAY);
