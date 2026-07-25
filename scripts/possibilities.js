@@ -26,8 +26,32 @@
   const SRC_BASE      = Math.max(...Object.values(VIDEO_DIMS).map(([w, h]) => Math.max(w, h)));
   const REF_FRACTION  = 1.1;
 
-  const carousel = document.getElementById('poss-carousel');
-  const track    = document.getElementById('poss-track');
+  const ROBOT_INFO = {
+    1:  { name: 'Carry Mate',     request: 'Bring my laptop here from inside the house.' },
+    2:  { name: 'Play Mate',      request: 'Take care of my dog while I’m away.' },
+    3:  { name: 'Service Runner', request: 'It’s crowded and hectic. Please handle the serving and item delivery.' },
+    4:  { name: 'Heavy Porter',   request: 'These moving boxes are too heavy. Move them quickly from the entrance to the living room.' },
+    5:  { name: 'Power Brace',    request: 'Hold the camera equipment steady so it doesn’t shake.' },
+    6:  { name: 'Pace Mate',      request: 'Run with me today and match my pace. Please carry my bag too.' },
+    7:  { name: 'Robo Pup',       request: 'Take care of my child while I step out for a bit.' },
+    8:  { name: 'Cart Centaur',   request: 'Pull this heavy cart and equipment safely to the destination.' },
+    9:  { name: 'Yard Runner',    request: 'Run a few small errands between the house and the yard.' },
+    10: { name: 'Info Carrier',   request: 'Show information to people at the event and hand out items at the same time.' },
+    11: { name: 'Multi Hand',     request: 'Help me organize ingredients and clean up while I cook.' },
+    12: { name: 'Snow Porter',    request: 'It’s hard to carry things through the snow. Please move the equipment and supplies.' },
+    13: { name: 'Lift Loader',    request: 'Lift these heavy boxes from the floor and place them on the loading platform.' },
+    14: { name: 'Aqua Scout',     request: 'Check the flooded area and clean where needed.' },
+    15: { name: 'Cable Climber',  request: 'Help me install cables and camera equipment in a high place.' },
+    16: { name: 'Quad Worker',    request: 'Hold this part in place and assemble it precisely.' },
+    17: { name: 'Pocket Cart',    request: 'I have too many small things to carry. Load them up and follow beside me.' },
+    18: { name: 'Scan Keeper',    request: 'Scan this whole space and record what has changed.' },
+  };
+
+  const carousel     = document.getElementById('poss-carousel');
+  const track        = document.getElementById('poss-track');
+  const infoEl       = document.getElementById('poss-info');
+  const infoBadgeEl  = document.getElementById('poss-info-badge');
+  const infoReqEl    = document.getElementById('poss-info-request');
   if (!carousel || !track) return;
 
   // Each robot's video: assign the per-browser source and force a frame to
@@ -157,6 +181,7 @@
       activeEl    = null;
       activeVideo = null;
     }
+    infoEl.classList.remove('visible');
     scheduleResume(DEACTIVATE_RESUME_DELAY);
   }
 
@@ -179,6 +204,15 @@
     activeLoopCount = 0;
     el.classList.add('active');
     track.classList.add('has-active');
+    const info = ROBOT_INFO[el.dataset.n];
+    if (info) {
+      infoBadgeEl.textContent = info.name;
+      // One sentence per line — requests are short (1-2 sentences) but read
+      // cleaner broken up rather than wrapping mid-sentence.
+      const sentences = info.request.match(/[^.]+\.\s*/g) || [info.request];
+      infoReqEl.innerHTML = sentences.map(s => s.trim()).join('<br>');
+    }
+    infoEl.classList.add('visible');
     // Unmute + play synchronously within the click handler's call stack, so
     // browsers treat this as a user gesture and allow audio playback.
     video.muted = false;
@@ -214,8 +248,16 @@
   function onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
     if (animating) return;
-    dragMoved       = false;
-    pointerDownX    = e.touches ? e.touches[0].clientX : e.clientX;
+    dragMoved    = false;
+    pointerDownX = e.touches ? e.touches[0].clientX : e.clientX;
+    if (activeEl) {
+      // A robot is active — leave the belt in place while it plays. Clicks
+      // still work (onPointerUp reads its own coordinates independently),
+      // just the drag-to-scroll machinery stays inert.
+      pointerHeld = false;
+      e.preventDefault();
+      return;
+    }
     dragStartX      = pointerDownX;
     dragOffsetStart = offsetX;
     pointerHeld     = true;
