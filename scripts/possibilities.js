@@ -169,6 +169,18 @@
   }
 
   // ── Active robot: centers, plays looping with sound; siblings dim to 30% ──
+  // Opacity is driven by CSS transitions off the .active/.has-active classes,
+  // but under load (the opacity fade running alongside the position/centering
+  // animation, switch after switch) the rendered value can occasionally get
+  // left stuck at some in-between number instead of settling at its target.
+  // This snaps it to the correct value shortly after the transition should
+  // have finished, as a correction rather than relying on the transition
+  // alone to land exactly right every time.
+  function settleOpacity(el, value) {
+    clearTimeout(el._opacityTimer);
+    el._opacityTimer = setTimeout(() => { el.style.opacity = value; }, 300);
+  }
+
   function deactivate() {
     animToken++;      // cancel any in-flight centering animation
     animating = false;
@@ -178,6 +190,7 @@
       activeVideo.muted = true;
       activeEl.classList.remove('active');
       track.classList.remove('has-active');
+      Array.prototype.forEach.call(track.children, child => settleOpacity(child, ''));
       activeEl    = null;
       activeVideo = null;
     }
@@ -194,6 +207,7 @@
       try { activeVideo.currentTime = 0; } catch {}
       activeVideo.muted = true;
       activeEl.classList.remove('active');
+      settleOpacity(activeEl, '0.3');
     }
     // Always start from frame 0, even the very first activation — the
     // paused-thumbnail trick in the setup loop above nudges currentTime to
@@ -204,6 +218,7 @@
     activeLoopCount = 0;
     el.classList.add('active');
     track.classList.add('has-active');
+    settleOpacity(el, '1');
     const info = ROBOT_INFO[el.dataset.n];
     if (info) {
       infoBadgeEl.textContent = info.name;
