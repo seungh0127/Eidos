@@ -245,6 +245,22 @@
     activate(nextIdx, items[nextIdx]);
   }
 
+  function advanceToPrev() {
+    if (!activeEl) return;
+    const items   = track.children;
+    const idx     = Array.prototype.indexOf.call(items, activeEl);
+    const prevIdx = (idx - 1 + items.length) % items.length;
+    activate(prevIdx, items[prevIdx]);
+  }
+
+  // While a robot is active, left/right arrow keys step to the
+  // previous/next one — same as clicking it.
+  window.addEventListener('keydown', e => {
+    if (!activeEl) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); advanceToNext(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); advanceToPrev(); }
+  });
+
   function onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
     if (animating) return;
