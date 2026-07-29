@@ -4,5 +4,8 @@
 assets/modules/
 possibilities/assets/*.mov
 
+# Extracted first-frame PNGs from assets/modules/ — large derived output
+assets/first_frames/
+
 # Local conversion scratch files
 work/
