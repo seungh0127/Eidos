@@ -355,6 +355,18 @@ html.is-safari #mod-overlay-bg {
   user-select: none;
   -webkit-user-select: none;
 }
+/* Keep the tablet button artwork unchanged while enlarging its invisible
+   touch target by 20% in both dimensions. */
+html.is-tablet .mod-nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  transform: translate(-50%, -50%);
+  border-radius: inherit;
+}
 #mod-nav-prev { left: calc(clamp(48px, 8vw, 110px) + 48px); }
 #mod-nav-next { right: calc(clamp(48px, 8vw, 110px) + 48px); }
 #mod-overlay.open .mod-nav-btn {

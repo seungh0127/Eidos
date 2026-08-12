@@ -107,8 +107,11 @@
   opacity: 1;
   transition: opacity 0.25s ease;
 }
-#poss-track.has-active .poss-item:not(.active) {
+#poss-track.has-active .poss-item {
   opacity: 0.3;
+}
+#poss-track.has-active .poss-item.active {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {

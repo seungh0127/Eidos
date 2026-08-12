@@ -54,10 +54,14 @@
   const infoReqEl    = document.getElementById('poss-info-request');
   if (!carousel || !track) return;
 
-  // Each robot's video: assign the per-browser source and force a frame to
-  // paint while paused (preload="metadata" alone often leaves the canvas
-  // blank until a frame is actually decoded).
-  track.querySelectorAll('.poss-video').forEach(video => {
+  // Each robot's video: assign the per-browser source lazily, only once it's
+  // about to scroll into view, instead of loading all 36 (18 robots × 2 DOM
+  // clones for the seamless belt) HQ alpha videos — tens of MB — the instant
+  // the page loads. Also force a frame to paint once loaded (preload
+  // ="metadata" alone often leaves the canvas blank until a frame is
+  // actually decoded).
+  function loadVideoSrc(video) {
+    if (!video || video.src) return;   // already loading/loaded
     const n = video.closest('.poss-item').dataset.n;
     const ext = IS_SAFARI ? 'mov' : 'webm';
     video.src = `assets/hq/${n}.${ext}`;
@@ -66,11 +70,26 @@
         try { video.currentTime = 0.01; } catch {}
       }
     }, { once: true });
+  }
+
+  track.querySelectorAll('.poss-video').forEach(video => {
     // Looping is driven manually (see onVideoEnded) so playback counts can
     // be tracked and the carousel can auto-advance after LOOP_LIMIT plays.
     video.loop = false;
     video.addEventListener('ended', onVideoEnded);
   });
+
+  // Load a bit before an item is actually on-screen (600px either side of
+  // the viewport) so it's ready by the time the belt drifts it into view,
+  // rather than popping in blank.
+  const videoLoadObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      loadVideoSrc(entry.target.querySelector('.poss-video'));
+      videoLoadObserver.unobserve(entry.target);
+    });
+  }, { rootMargin: '0px 600px' });
+  track.querySelectorAll('.poss-item').forEach(item => videoLoadObserver.observe(item));
 
   let itemW     = 0;
   let totalW    = 0;
@@ -169,16 +188,35 @@
   }
 
   // ── Active robot: centers, plays looping with sound; siblings dim to 30% ──
-  // Opacity is driven by CSS transitions off the .active/.has-active classes,
-  // but under load (the opacity fade running alongside the position/centering
-  // animation, switch after switch) the rendered value can occasionally get
-  // left stuck at some in-between number instead of settling at its target.
-  // This snaps it to the correct value shortly after the transition should
-  // have finished, as a correction rather than relying on the transition
-  // alone to land exactly right every time.
-  function settleOpacity(el, value) {
-    clearTimeout(el._opacityTimer);
-    el._opacityTimer = setTimeout(() => { el.style.opacity = value; }, 300);
+  // Opacity is class-driven only. Clear legacy inline values/timers so a stale
+  // delayed correction can never override the currently active robot.
+  function resetInlineOpacity() {
+    Array.prototype.forEach.call(track.children, child => {
+      clearTimeout(child._opacityTimer);
+      child.style.removeProperty('opacity');
+    });
+  }
+
+  function playActiveVideo(video) {
+    const attempt = () => {
+      if (video !== activeVideo) return;
+      video.muted = false;
+      video.play().catch(() => {
+        if (video !== activeVideo) return;
+        // If an unmuted retry loses its user-gesture allowance while the lazy
+        // source is loading, keep the visual playback guarantee with muted
+        // playback rather than leaving the selected robot frozen.
+        video.muted = true;
+        video.play().catch(() => {});
+      });
+    };
+
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      attempt();
+    } else {
+      video.addEventListener('canplay', attempt, { once: true });
+      video.load();
+    }
   }
 
   function deactivate() {
@@ -190,7 +228,7 @@
       activeVideo.muted = true;
       activeEl.classList.remove('active');
       track.classList.remove('has-active');
-      Array.prototype.forEach.call(track.children, child => settleOpacity(child, ''));
+      resetInlineOpacity();
       activeEl    = null;
       activeVideo = null;
     }
@@ -201,13 +239,13 @@
   function activate(domIdx, el) {
     const video = el.querySelector('.poss-video');
     if (!video) return;
+    loadVideoSrc(video);   // safety net — should already be loaded if it's clickable/visible
     clearTimeout(resumeTimer);
     if (activeEl && activeEl !== el) {
       activeVideo.pause();
       try { activeVideo.currentTime = 0; } catch {}
       activeVideo.muted = true;
       activeEl.classList.remove('active');
-      settleOpacity(activeEl, '0.3');
     }
     // Always start from frame 0, even the very first activation — the
     // paused-thumbnail trick in the setup loop above nudges currentTime to
@@ -218,7 +256,7 @@
     activeLoopCount = 0;
     el.classList.add('active');
     track.classList.add('has-active');
-    settleOpacity(el, '1');
+    resetInlineOpacity();
     const info = ROBOT_INFO[el.dataset.n];
     if (info) {
       infoBadgeEl.textContent = info.name;
@@ -228,10 +266,9 @@
       infoReqEl.innerHTML = sentences.map(s => s.trim()).join('<br>');
     }
     infoEl.classList.add('visible');
-    // Unmute + play synchronously within the click handler's call stack, so
-    // browsers treat this as a user gesture and allow audio playback.
-    video.muted = false;
-    video.play().catch(() => {});
+    // Start immediately when ready; a lazily loaded source retries on canplay.
+    // If delayed unmuted playback is blocked, play muted rather than freezing.
+    playActiveVideo(video);
 
     const center = window.innerWidth / 2 - itemW / 2;
     const target = domIdx * itemW - center;
